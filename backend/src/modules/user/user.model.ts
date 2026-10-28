@@ -2,6 +2,7 @@
 import mongoose, {Schema , Types, Document } from "mongoose";
 import { USER_ROLES } from "./user.constants.js";
 import { UserRole } from "../../types/authTypes.js";
+import { Plan, PLANS } from "../project/project.constants.js";
 
 interface IUser extends Document {
     name:string
@@ -21,6 +22,7 @@ interface IUser extends Document {
     updatedAt:Date
     avatarKey?: string
     avatarUrl?: string
+    plan:Plan
 }
 interface ITokenFamily extends Document {
     userId: Types.ObjectId;
@@ -104,6 +106,7 @@ const userSchema = new mongoose.Schema({
     },
     avatarKey: { type: String, select: false },
     avatarUrl: { type: String },
+    plan: { type: String, enum: PLANS, default: 'free' },
 },
 {
     timestamps:true
