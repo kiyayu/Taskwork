@@ -6,6 +6,7 @@ import { Membership } from './membership.model.js'
 import { can, type Action, type Role } from './project.permissions.js'
 import { PLAN_LIMITS } from './project.constants.js'
 import type { ProjectResponseDTO } from './project.dto.js'
+import { Task } from '../task/task.model.js'
 
 const map = (p: any, role: Role): ProjectResponseDTO => ({
   id: p._id.toString(),
@@ -68,6 +69,7 @@ export const projectService = {
     await projectService.assertCan(userId, projectId, 'project:delete')
     await Membership.deleteMany({ projectId })
     await Project.findByIdAndDelete(projectId)
+    await Task.deleteMany({projectId})
     // later modules (task, comment) will delete their rows here too
   },
 }

@@ -13,6 +13,7 @@ import userRoutes from './modules/user/user.routes.js'
 import notificationRoutes from './modules/notification/notification.routes.js'
 import uploadRoutes from './modules/upload/upload.routes.js'
 import projectRoutes from './modules/project/project.routes.js'
+import taskRoutes from './modules/task/task.routes.js'
 
 const app = express()
 
@@ -43,6 +44,8 @@ app.use('/api/user', userRoutes)
 app.use('/api/notifications', notificationRoutes) 
 app.use('/api/uploads', uploadRoutes)
 app.use('/api/projects', projectRoutes)
+app.use('/api/projects/:projectId/tasks', taskRoutes)
+
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' })
 })
