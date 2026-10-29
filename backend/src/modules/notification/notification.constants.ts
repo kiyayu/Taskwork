@@ -1,11 +1,16 @@
 //src/modules/notification/notification.constants.ts
-export const NOTIFICATION_TYPES = ['password_changed', 'email_changed', 'new_sign_in'] as const
+export const NOTIFICATION_TYPES = [
+  'password_changed', 'email_changed', 'new_sign_in', 'mentioned', 'task_assigned',
+] as const
+
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]
 
-export type NotificationMeta = { device?: string; ip?: string; newEmail?: string }
-
+export type NotificationMeta = {
+  device?: string; ip?: string; newEmail?: string
+  actorName?: string; taskTitle?: string
+}
 type CatalogEntry = {
-  category: 'security'
+  category: 'security' | 'activity'
   email: boolean
   title: string
   message: (meta: NotificationMeta) => string
@@ -34,6 +39,15 @@ export const NOTIFICATION_CATALOG: Record<NotificationType, CatalogEntry> = {
     message: (m) =>
       `Your account was signed in from ${m.device ?? 'an unknown device'}${m.ip ? ` (${m.ip})` : ''}. If this was not you, revoke the session and change your password.`,
   },
+    mentioned: {
+    category: 'activity', email: false, title: 'You were mentioned',
+    message: (m) => `${m.actorName ?? 'Someone'} mentioned you on "${m.taskTitle ?? 'a task'}".`,
+  },
+  task_assigned: {
+    category: 'activity', email: false, title: 'Task assigned to you',
+    message: (m) => `${m.actorName ?? 'Someone'} assigned you "${m.taskTitle ?? 'a task'}".`,
+  },
+
 }
 
 export const NOTIFICATION_TTL_SECONDS = 90 * 24 * 60 * 60

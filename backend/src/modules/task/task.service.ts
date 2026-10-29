@@ -7,6 +7,7 @@ import { computeOrder } from './task.order.js'
 import type {
   CreateTaskDTO, ListTasksQueryDTO, MoveTaskDTO, TaskResponseDTO, UpdateTaskDTO,
 } from './task.dto.js'
+import { Comment } from '../comment/comment.model.js'
 
 const map = (t: any): TaskResponseDTO => ({
   id: t._id.toString(),
@@ -133,6 +134,7 @@ export const taskService = {
   remove: async (userId: string, projectId: string, taskId: string): Promise<void> => {
     await projectService.assertCan(userId, projectId, 'task:delete')
     const task = await findTask(projectId, taskId)
+    await Comment.deleteMany({taskId})
     await task.deleteOne()
   },
 }
