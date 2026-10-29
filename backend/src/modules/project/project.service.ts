@@ -15,8 +15,8 @@ const map = (p: any, role: Role): ProjectResponseDTO => ({
 })
 
 export const projectService = {
-  // The guard every other module (task, comment...) will call.
-  // 404 for non-members: never reveal that a project exists.
+  
+    
   assertCan: async (userId: string, projectId: string, action: Action): Promise<Role> => {
     const m = await Membership.findOne({ projectId, userId })
     if (!m) throw ApiError.notFound('Project not found')
@@ -37,7 +37,7 @@ export const projectService = {
     try {
       await Membership.create({ projectId: project._id, userId, role: 'owner' })
     } catch (err) {
-      await Project.findByIdAndDelete(project._id) // never leave an ownerless project
+      await Project.findByIdAndDelete(project._id)  
       throw err
     }
     return map(project, 'owner')
@@ -46,7 +46,7 @@ export const projectService = {
   listMine: async (userId: string): Promise<ProjectResponseDTO[]> => {
     const memberships = await Membership.find({ userId }).populate('projectId').sort({ createdAt: -1 })
     return memberships
-      .filter((m) => m.projectId) // skip rows whose project was removed
+      .filter((m) => m.projectId) 
       .map((m) => map(m.projectId as any, m.role))
   },
 
