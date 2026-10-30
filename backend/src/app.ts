@@ -15,6 +15,7 @@ import uploadRoutes from './modules/upload/upload.routes.js'
 import projectRoutes from './modules/project/project.routes.js'
 import taskRoutes from './modules/task/task.routes.js'
 import commentRoutes from './modules/comment/comment.routes.js'
+import listRoutes from './modules/list/list.routes.js'
 
 
 const app = express()
@@ -48,6 +49,7 @@ app.use('/api/uploads', uploadRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/projects/:projectId/tasks', taskRoutes)
 app.use('/api/projects/:projectId/tasks/:taskId/comments', commentRoutes)
+app.use('/api/projects/:projectId/lists', listRoutes)
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' })

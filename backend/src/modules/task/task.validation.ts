@@ -1,10 +1,8 @@
 //src/modules/task/task.validation.ts
 import { z } from 'zod'
-import { TASK_STATUSES } from './task.model.js'
 
 const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid id')
 const projectParams = { projectId: objectId }
-const status = z.enum(TASK_STATUSES)
 const priority = z.union([z.literal(1), z.literal(2), z.literal(3)])
 
 export const createTaskSchema = z.object({
@@ -12,7 +10,7 @@ export const createTaskSchema = z.object({
   body: z.object({
     title: z.string().trim().min(1).max(200),
     description: z.string().max(5000).optional(),
-    status: status.optional(),
+    listId: objectId.optional(), // default: the project's first list
     priority: priority.optional(),
     assigneeId: objectId.nullable().optional(),
     dueDate: z.string().datetime().nullable().optional(),
@@ -38,14 +36,14 @@ export const updateTaskSchema = z.object({
     priority: priority.optional(),
     assigneeId: objectId.nullable().optional(),
     dueDate: z.string().datetime().nullable().optional(),
-  }).strict(), 
+  }).strict(), // list and order can NOT be set here, only through move
 })
 
 export const moveTaskSchema = z.object({
   params: z.object({ ...projectParams, taskId: objectId }).strict(),
   body: z.object({
-    status,
+    listId: objectId,
     aboveId: objectId.nullable().optional(),
-    belowId: objectId.nullable().optional(),  
+    belowId: objectId.nullable().optional(),
   }).strict(),
 })

@@ -3,8 +3,7 @@ import { z } from 'zod'
 import {
   createTaskSchema, listTasksSchema, taskIdSchema, updateTaskSchema, moveTaskSchema,
 } from './task.validation.js'
-import type { TaskStatus } from './task.model.js'
-
+ 
 export type CreateTaskDTO = z.infer<typeof createTaskSchema>['body']
 export type ListTasksQueryDTO = z.infer<typeof listTasksSchema>['query']
 export type TaskParamsDTO = z.infer<typeof taskIdSchema>['params']
@@ -17,7 +16,7 @@ export interface TaskResponseDTO {
   projectId: string
   title: string
   description: string
-  status: TaskStatus
+  listId: string
   order: number
   assigneeId: string | null
   dueDate: Date | null

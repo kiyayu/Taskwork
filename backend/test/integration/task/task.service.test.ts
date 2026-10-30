@@ -4,7 +4,9 @@ import { connectTestDb, clearTestDb, disconnectTestDb } from '../../helpers/test
 import { User } from '../../../src/modules/user/user.model'
 import { Membership } from '../../../src/modules/project/membership.model'
 import { Task } from '../../../src/modules/task/task.model'
+import { List } from '../../../src/modules/list/list.model'
 import { projectService } from '../../../src/modules/project/project.service'
+import { listService } from '../../../src/modules/list/list.service'
 import { taskService } from '../../../src/modules/task/task.service'
 
 const makeUser = () =>
@@ -21,6 +23,10 @@ const setup = async () => {
 
 const join = (projectId: string, userId: string, role: 'editor' | 'viewer') =>
   Membership.create({ projectId, userId, role })
+
+// a second list in the project (the three default lists already exist)
+const secondList = (ownerId: string, projectId: string) =>
+  listService.create(ownerId, projectId, { name: 'Other' })
 
 describe('taskService', () => {
   beforeAll(async () => connectTestDb())
@@ -40,21 +46,23 @@ describe('taskService', () => {
       const viewer = await makeUser()
       await join(project.id, viewer.id, 'viewer')
       const t = await taskService.create(owner.id, project.id, { title: 'T' })
+      const other = await secondList(owner.id, project.id)
 
       await expect(taskService.list(viewer.id, project.id, {})).resolves.toHaveLength(1)
       await expect(taskService.create(viewer.id, project.id, { title: 'x' })).rejects.toThrow(/permission/i)
       await expect(taskService.update(viewer.id, project.id, t.id, { title: 'x' })).rejects.toThrow(/permission/i)
-      await expect(taskService.move(viewer.id, project.id, t.id, { status: 'done' })).rejects.toThrow(/permission/i)
+      await expect(taskService.move(viewer.id, project.id, t.id, { listId: other.id })).rejects.toThrow(/permission/i)
       await expect(taskService.remove(viewer.id, project.id, t.id)).rejects.toThrow(/permission/i)
     })
 
     it('an editor can work on tasks', async () => {
-      const { owner, project } = await setup()
+      const { project } = await setup()
       const editor = await makeUser()
       await join(project.id, editor.id, 'editor')
       const t = await taskService.create(editor.id, project.id, { title: 'T' })
-      await expect(taskService.update(editor.id, project.id, t.id, { title: 'U' })).resolves.toMatchObject({ title: 'U' })
-      expect(owner.id).toBeTruthy()
+      await expect(
+        taskService.update(editor.id, project.id, t.id, { title: 'U' })
+      ).resolves.toMatchObject({ title: 'U' })
     })
 
     it("a task id from another project is 'not found' even for a member", async () => {
@@ -64,6 +72,24 @@ describe('taskService', () => {
       await expect(
         taskService.get(a.owner.id, a.project.id, taskInB.id)
       ).rejects.toThrow(/task not found/i)
+    })
+  })
+
+  describe('lists', () => {
+    it('a new task goes to the first default list', async () => {
+      const { owner, project } = await setup()
+      const t = await taskService.create(owner.id, project.id, { title: 'T' })
+      const first = await List.findOne({ projectId: project.id }).sort({ order: 1 })
+      expect(t.listId).toBe(first!.id)
+    })
+
+    it('a list from another project is rejected', async () => {
+      const a = await setup()
+      const b = await setup()
+      const foreign = await List.findOne({ projectId: b.project.id })
+      await expect(
+        taskService.create(a.owner.id, a.project.id, { title: 'T', listId: foreign!.id })
+      ).rejects.toThrow(/list not found/i)
     })
   })
 
@@ -83,7 +109,7 @@ describe('taskService', () => {
   })
 
   describe('ordering', () => {
-    it('new tasks append to the bottom of their column', async () => {
+    it('new tasks append to the bottom of their list', async () => {
       const { owner, project } = await setup()
       const a = await taskService.create(owner.id, project.id, { title: 'A' })
       const b = await taskService.create(owner.id, project.id, { title: 'B' })
@@ -97,7 +123,7 @@ describe('taskService', () => {
       const c = await taskService.create(owner.id, project.id, { title: 'C' })
 
       const moved = await taskService.move(owner.id, project.id, c.id, {
-        status: 'todo', aboveId: a.id, belowId: b.id,
+        listId: a.listId, aboveId: a.id, belowId: b.id,
       })
 
       expect(moved.order).toBeGreaterThan(a.order)
@@ -108,19 +134,21 @@ describe('taskService', () => {
       expect(freshB?.order).toBe(b.order)
     })
 
-    it('moving to another column sets the status', async () => {
+    it('moving to another list sets the list', async () => {
       const { owner, project } = await setup()
       const t = await taskService.create(owner.id, project.id, { title: 'T' })
-      const moved = await taskService.move(owner.id, project.id, t.id, { status: 'doing' })
-      expect(moved.status).toBe('doing')
+      const other = await secondList(owner.id, project.id)
+      const moved = await taskService.move(owner.id, project.id, t.id, { listId: other.id })
+      expect(moved.listId).toBe(other.id)
     })
 
-    it('rejects a neighbor from another column', async () => {
+    it('rejects a neighbor from another list', async () => {
       const { owner, project } = await setup()
-      const a = await taskService.create(owner.id, project.id, { title: 'A', status: 'done' })
+      const other = await secondList(owner.id, project.id)
+      const a = await taskService.create(owner.id, project.id, { title: 'A', listId: other.id })
       const t = await taskService.create(owner.id, project.id, { title: 'T' })
       await expect(
-        taskService.move(owner.id, project.id, t.id, { status: 'todo', aboveId: a.id })
+        taskService.move(owner.id, project.id, t.id, { listId: t.listId, aboveId: a.id })
       ).rejects.toThrow(/neighbor/i)
     })
 
@@ -130,7 +158,7 @@ describe('taskService', () => {
       const b = await taskService.create(owner.id, project.id, { title: 'B' })
       const c = await taskService.create(owner.id, project.id, { title: 'C' })
       await expect(
-        taskService.move(owner.id, project.id, c.id, { status: 'todo', aboveId: b.id, belowId: a.id })
+        taskService.move(owner.id, project.id, c.id, { listId: c.listId, aboveId: b.id, belowId: a.id })
       ).rejects.toThrow(/out of order/i)
     })
   })
@@ -146,16 +174,18 @@ describe('taskService', () => {
 
       const restored = await taskService.restore(owner.id, project.id, t.id)
       expect(restored.order).toBe(t.order)
+      expect(restored.listId).toBe(t.listId)
       expect(await taskService.list(owner.id, project.id, {})).toHaveLength(1)
     })
   })
 
   describe('project deletion', () => {
-    it('deleting a project deletes its tasks', async () => {
+    it('deleting a project deletes its tasks and lists', async () => {
       const { owner, project } = await setup()
       await taskService.create(owner.id, project.id, { title: 'T' })
       await projectService.remove(owner.id, project.id)
       expect(await Task.countDocuments({ projectId: project.id })).toBe(0)
+      expect(await List.countDocuments({ projectId: project.id })).toBe(0)
     })
   })
 })

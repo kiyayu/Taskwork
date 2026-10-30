@@ -1,14 +1,12 @@
 //src/modules/task/task.model.ts
 import mongoose, { Schema, Types, Document } from 'mongoose'
 
-export const TASK_STATUSES = ['todo', 'doing', 'done'] as const
-export type TaskStatus = (typeof TASK_STATUSES)[number]
-
+ 
 export interface ITask extends Document {
   projectId: Types.ObjectId
   title: string
   description: string
-  status: TaskStatus
+ listId: Types.ObjectId   
   order: number
   assigneeId?: Types.ObjectId | null
   dueDate?: Date | null
@@ -24,8 +22,7 @@ const taskSchema = new Schema<ITask>(
     projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
     title: { type: String, required: true, trim: true, maxlength: 200 },
     description: { type: String, default: '', maxlength: 5000 },
-    status: { type: String, enum: TASK_STATUSES, default: 'todo' },
-    order: { type: Number, required: true },
+listId: { type: Schema.Types.ObjectId, ref: 'List', required: true },      order: { type: Number, required: true },
     assigneeId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     dueDate: { type: Date, default: null },
     priority: { type: Number, enum: [1, 2, 3], default: 2 },
@@ -35,6 +32,5 @@ const taskSchema = new Schema<ITask>(
   { timestamps: true }
 )
  
-taskSchema.index({ projectId: 1, status: 1, order: 1 })
-
+taskSchema.index({ projectId: 1, listId: 1, order: 1 })   
 export const Task = mongoose.model<ITask>('Task', taskSchema)

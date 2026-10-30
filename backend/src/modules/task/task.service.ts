@@ -2,19 +2,22 @@
 import { ApiError } from '../../common/errors/apiErrors.js'
 import { Membership } from '../project/membership.model.js'
 import { projectService } from '../project/project.service.js'
-import { Task, type TaskStatus } from './task.model.js'
+import { List } from '../list/list.model.js'
+import { Comment } from '../comment/comment.model.js'
+import { ChecklistItem } from '../checklist/checklist.model.js'
+import { attachmentService } from '../attachment/attachment.service.js'
+import { Task } from './task.model.js'
 import { computeOrder } from './task.order.js'
 import type {
   CreateTaskDTO, ListTasksQueryDTO, MoveTaskDTO, TaskResponseDTO, UpdateTaskDTO,
 } from './task.dto.js'
-import { Comment } from '../comment/comment.model.js'
 
 const map = (t: any): TaskResponseDTO => ({
   id: t._id.toString(),
   projectId: t.projectId.toString(),
   title: t.title,
   description: t.description,
-  status: t.status,
+  listId: t.listId.toString(),
   order: t.order,
   assigneeId: t.assigneeId ? t.assigneeId.toString() : null,
   dueDate: t.dueDate ?? null,
@@ -30,6 +33,13 @@ const findTask = async (projectId: string, taskId: string) => {
   return task
 }
 
+// A list id is only valid if it belongs to THIS project.
+const assertListInProject = async (projectId: string, listId: string) => {
+  const list = await List.findOne({ _id: listId, projectId })
+  if (!list) throw ApiError.badRequest('List not found in this project')
+  return list
+}
+
 // An assignee must belong to the project.
 const assertAssignable = async (projectId: string, assigneeId?: string | null) => {
   if (!assigneeId) return
@@ -37,8 +47,8 @@ const assertAssignable = async (projectId: string, assigneeId?: string | null) =
   if (!m) throw ApiError.badRequest('Assignee must be a member of the project')
 }
 
-const lastOrderIn = async (projectId: string, status: TaskStatus): Promise<number | null> => {
-  const last = await Task.findOne({ projectId, status, archivedAt: null }).sort({ order: -1 })
+const lastOrderIn = async (projectId: string, listId: string): Promise<number | null> => {
+  const last = await Task.findOne({ projectId, listId, archivedAt: null }).sort({ order: -1 })
   return last ? last.order : null
 }
 
@@ -47,14 +57,18 @@ export const taskService = {
     await projectService.assertCan(userId, projectId, 'task:create')
     await assertAssignable(projectId, input.assigneeId)
 
-    const status = input.status ?? 'todo'
-    const order = computeOrder(await lastOrderIn(projectId, status), null) // append to the column
+    const list = input.listId
+      ? await assertListInProject(projectId, input.listId)
+      : await List.findOne({ projectId }).sort({ order: 1 })
+    if (!list) throw ApiError.badRequest('Create a list first')
+
+    const order = computeOrder(await lastOrderIn(projectId, list.id), null) // append to the list
 
     const task = await Task.create({
       projectId,
       title: input.title,
       description: input.description ?? '',
-      status,
+      listId: list._id,
       order,
       priority: input.priority ?? 2,
       assigneeId: input.assigneeId ?? null,
@@ -67,7 +81,7 @@ export const taskService = {
   list: async (userId: string, projectId: string, query: ListTasksQueryDTO): Promise<TaskResponseDTO[]> => {
     await projectService.assertCan(userId, projectId, 'project:read')
     const filter = query.archived ? { projectId, archivedAt: { $ne: null } } : { projectId, archivedAt: null }
-    const tasks = await Task.find(filter).sort({ status: 1, order: 1 })
+    const tasks = await Task.find(filter).sort({ listId: 1, order: 1 })
     return tasks.map(map)
   },
 
@@ -94,11 +108,12 @@ export const taskService = {
   move: async (userId: string, projectId: string, taskId: string, input: MoveTaskDTO): Promise<TaskResponseDTO> => {
     await projectService.assertCan(userId, projectId, 'task:update')
     const task = await findTask(projectId, taskId)
+    const list = await assertListInProject(projectId, input.listId)
 
     const neighbor = async (id?: string | null) => {
       if (!id) return null
-      // must be in the same project AND the target column, and not archived
-      const n = await Task.findOne({ _id: id, projectId, status: input.status, archivedAt: null })
+      // must be in the same project AND the target list, and not archived
+      const n = await Task.findOne({ _id: id, projectId, listId: list._id, archivedAt: null })
       if (!n || n.id === taskId) throw ApiError.badRequest('Invalid neighbor task')
       return n
     }
@@ -109,7 +124,7 @@ export const taskService = {
       throw ApiError.badRequest('Neighbors are out of order')
     }
 
-    task.status = input.status
+    task.listId = list._id
     task.order = computeOrder(above?.order, below?.order)
     await task.save()
     return map(task)
@@ -118,7 +133,7 @@ export const taskService = {
   archive: async (userId: string, projectId: string, taskId: string): Promise<TaskResponseDTO> => {
     await projectService.assertCan(userId, projectId, 'task:update')
     const task = await findTask(projectId, taskId)
-    task.archivedAt = new Date() // order and status are kept, so restore puts it back in place
+    task.archivedAt = new Date() // list and order are kept, so restore puts it back in place
     await task.save()
     return map(task)
   },
@@ -134,7 +149,9 @@ export const taskService = {
   remove: async (userId: string, projectId: string, taskId: string): Promise<void> => {
     await projectService.assertCan(userId, projectId, 'task:delete')
     const task = await findTask(projectId, taskId)
-    await Comment.deleteMany({taskId})
+    await Comment.deleteMany({ taskId })
+    await ChecklistItem.deleteMany({ taskId })
+    await attachmentService.removeForTask(taskId)
     await task.deleteOne()
   },
 }
