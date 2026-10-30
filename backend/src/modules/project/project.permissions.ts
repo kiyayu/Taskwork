@@ -13,14 +13,15 @@ export type Action =
   | 'task:delete'
   | 'comment:create'
   | 'list:create' | 'list:update' | 'list:delete'
+  | 'attachment:create' | 'attachment:delete'
  
 const MATRIX: Record<Role, readonly Action[]> = {
   viewer: ['project:read'],
-  editor: ['project:read', 'task:create', 'task:update', 'task:delete','list:create', 'list:update', 'comment:create'],
+  editor: ['project:read', 'task:create', 'task:update', 'task:delete','list:create', 'list:update', 'comment:create','attachment:create', 'attachment:delete'],
   owner: [
     'project:read', 'project:update', 'project:delete',
     'member:invite', 'member:remove',
-    'task:create', 'task:update', 'task:delete', 'comment:create', 'list:create', 'list:update', 'list:delete',
+    'task:create', 'task:update', 'task:delete', 'comment:create', 'list:create', 'list:update', 'list:delete','attachment:create', 'attachment:delete'
   ],
 }
 

@@ -8,7 +8,8 @@ import { PLAN_LIMITS } from './project.constants.js'
 import type { ProjectResponseDTO } from './project.dto.js'
 import { Task } from '../task/task.model.js'
 import { Comment } from '../comment/comment.model.js'
-
+import { listService } from '../list/list.service.js'
+import { List } from '../list/list.model.js'
 const map = (p: any, role: Role): ProjectResponseDTO => ({
   id: p._id.toString(),
   name: p.name,
@@ -35,16 +36,18 @@ export const projectService = {
       throw ApiError.forbidden('Project limit reached for your plan. Upgrade to create more')
     }
 
-    const project = await Project.create({ name, ownerId: userId })
-    try {
-      await Membership.create({ projectId: project._id, userId, role: 'owner' })
-    } catch (err) {
-      await Project.findByIdAndDelete(project._id)  
-      throw err
-    }
-    return map(project, 'owner')
+   const project = await Project.create({ name, ownerId: userId })
+try {
+  await Membership.create({ projectId: project._id, userId, role: 'owner' })
+  await listService.createDefaults(project._id.toString())
+} catch (err) {
+  await Membership.deleteMany({ projectId: project._id })
+  await List.deleteMany({ projectId: project._id })
+  await Project.findByIdAndDelete(project._id)
+  throw err
+}
+return map(project, 'owner')
   },
-
   listMine: async (userId: string): Promise<ProjectResponseDTO[]> => {
     const memberships = await Membership.find({ userId }).populate('projectId').sort({ createdAt: -1 })
     return memberships
@@ -68,10 +71,10 @@ export const projectService = {
 
   remove: async (userId: string, projectId: string): Promise<void> => {
     await projectService.assertCan(userId, projectId, 'project:delete')
-    await Membership.deleteMany({ projectId })
-    await Project.findByIdAndDelete(projectId)
-    await Task.deleteMany({projectId})
-    await Comment.deleteMany({projectId})
-    // later modules (task, comment) will delete their rows here too
+   await Membership.deleteMany({ projectId })
+await Task.deleteMany({ projectId })
+await Comment.deleteMany({ projectId })
+await List.deleteMany({ projectId })
+await Project.findByIdAndDelete(projectId)
   },
 }

@@ -17,8 +17,8 @@ import taskRoutes from './modules/task/task.routes.js'
 import commentRoutes from './modules/comment/comment.routes.js'
 import listRoutes from './modules/list/list.routes.js'
 import checklistRoutes from './modules/checklist/checklist.routes.js'
-
-
+import attachmentRoutes from './modules/attachment/attachment.routes.js'
+ 
 const app = express()
 
 app.use(helmet())
@@ -52,6 +52,9 @@ app.use('/api/projects/:projectId/tasks', taskRoutes)
 app.use('/api/projects/:projectId/tasks/:taskId/comments', commentRoutes)
 app.use('/api/projects/:projectId/lists', listRoutes)
 app.use('/api/projects/:projectId/tasks/:taskId/checklist', checklistRoutes)
+app.use('/api/projects/:projectId/tasks/:taskId/attachments', attachmentRoutes)
+
+
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' })
 })
