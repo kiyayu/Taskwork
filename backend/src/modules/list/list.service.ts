@@ -1,9 +1,11 @@
- //src/modules/list/list.service.ts
+//src/modules/list/list.service.ts
 import { ApiError } from '../../common/errors/apiErrors.js'
 import { projectService } from '../project/project.service.js'
 import { computeOrder } from '../task/task.order.js'
 import { Task } from '../task/task.model.js'
 import { Comment } from '../comment/comment.model.js'
+import { activityService } from '../activity/activity.service.js' // NEW
+import { live } from '../realtime/realtime.publish.js' // NEW (module 9)
 import { List } from './list.model.js'
 import type { CreateListDTO, ListResponseDTO, MoveListDTO, UpdateListDTO } from './list.dto.js'
 
@@ -29,6 +31,13 @@ export const listService = {
     await projectService.assertCan(userId, projectId, 'list:create')
     const last = await List.findOne({ projectId }).sort({ order: -1 })
     const list = await List.create({ projectId, name: input.name, order: computeOrder(last?.order ?? null, null) })
+
+    // NEW
+    await activityService.record({
+      projectId, actorId: userId, type: 'list_created', meta: { listName: list.name },
+    })
+    live(projectId, 'lists_changed', { actorId: userId })
+
     return map(list)
   },
 
@@ -42,6 +51,8 @@ export const listService = {
     const list = await findList(projectId, listId)
     list.name = input.name
     await list.save()
+
+    live(projectId, 'lists_changed', { actorId: userId }) // NEW
     return map(list)
   },
 
@@ -61,6 +72,8 @@ export const listService = {
 
     list.order = computeOrder(above?.order, below?.order)
     await list.save()
+
+    live(projectId, 'lists_changed', { actorId: userId }) // NEW
     return map(list)
   },
 
@@ -72,5 +85,7 @@ export const listService = {
       throw ApiError.conflict('Move or archive the tasks in this list first')
     }
     await list.deleteOne()
+
+    live(projectId, 'lists_changed', { actorId: userId }) // NEW
   },
 }

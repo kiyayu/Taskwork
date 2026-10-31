@@ -6,6 +6,8 @@ import { Task } from '../task/task.model.js'
 import { User } from '../user/user.model.js'
 import { uploadService } from '../upload/upload.service.js'
 import { storage } from '../upload/storage/index.js'
+import { activityService } from '../activity/activity.service.js' // NEW
+import { live } from '../realtime/realtime.publish.js' // NEW (module 9)
 import { Attachment } from './attachment.model.js'
 import type { AttachmentResponseDTO, CreateAttachmentDTO } from './attachment.dto.js'
 
@@ -16,8 +18,11 @@ const map = (a: any, uploaderName: string): AttachmentResponseDTO => ({
   uploaderName, name: a.name, url: a.url, bytes: a.bytes, createdAt: a.createdAt,
 })
 
+// CHANGED: now returns the task (title only), so create can log the title. Other callers ignore it.
 const assertTask = async (projectId: string, taskId: string) => {
-  if (!(await Task.exists({ _id: taskId, projectId }))) throw ApiError.notFound('Task not found')
+  const task = await Task.findOne({ _id: taskId, projectId }).select('title')
+  if (!task) throw ApiError.notFound('Task not found')
+  return task
 }
 
 // Storage cleanup must never fail a request: an orphan is better than a broken delete.
@@ -27,7 +32,7 @@ const deleteFile = (fileKey: string) =>
 export const attachmentService = {
   create: async (userId: string, projectId: string, taskId: string, input: CreateAttachmentDTO) => {
     await projectService.assertCan(userId, projectId, 'attachment:create')
-    await assertTask(projectId, taskId)
+    const task = await assertTask(projectId, taskId)
 
     if ((await Attachment.countDocuments({ taskId })) >= MAX_PER_TASK) {
       throw ApiError.badRequest(`A task can have at most ${MAX_PER_TASK} attachments`)
@@ -36,18 +41,26 @@ export const attachmentService = {
     // owner, purpose, real size and format are checked against storage, not the browser
     const file = await uploadService.confirm(userId, { purpose: 'attachment', fileKey: input.fileKey })
 
-    try {
-      const row = await Attachment.create({
-        projectId, taskId, uploaderId: userId,
-        fileKey: file.fileKey, url: file.fileUrl, name: input.name, bytes: file.bytes,
-      })
-      const user = await User.findById(userId)
-      return map(row, user?.name ?? 'Unknown')
-    } catch (err: any) {
+    // CHANGED (same behavior): the file cleanup only covers the database write itself.
+    // Before, the user lookup was inside the same try, so a failure there would have deleted a file
+    // whose row already existed. Activity and live events must stay OUTSIDE anything that deletes data.
+    const row = await Attachment.create({
+      projectId, taskId, uploaderId: userId,
+      fileKey: file.fileKey, url: file.fileUrl, name: input.name, bytes: file.bytes,
+    }).catch(async (err: any) => {
       if (err?.code === 11000) throw ApiError.conflict('This file is already attached')
       await deleteFile(file.fileKey) // no row means no owner for the file
       throw err
-    }
+    })
+
+    // NEW
+    await activityService.record({
+      projectId, actorId: userId, type: 'attachment_added', taskId, meta: { taskTitle: task.title },
+    })
+    live(projectId, 'attachments_changed', { taskId, actorId: userId })
+
+    const user = await User.findById(userId)
+    return map(row, user?.name ?? 'Unknown')
   },
 
   list: async (userId: string, projectId: string, taskId: string): Promise<AttachmentResponseDTO[]> => {
@@ -67,6 +80,8 @@ export const attachmentService = {
       throw ApiError.forbidden('You do not have permission to do this')
     }
     await row.deleteOne()
+
+    live(projectId, 'attachments_changed', { taskId, actorId: userId }) // NEW
     await deleteFile(row.fileKey)
   },
 

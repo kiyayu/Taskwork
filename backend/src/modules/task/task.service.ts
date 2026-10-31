@@ -6,8 +6,9 @@ import { List } from '../list/list.model.js'
 import { Comment } from '../comment/comment.model.js'
 import { ChecklistItem } from '../checklist/checklist.model.js'
 import { attachmentService } from '../attachment/attachment.service.js'
-import { activityService } from '../activity/activity.service.js' // NEW
-import { User } from '../user/user.model.js' // NEW
+import { activityService } from '../activity/activity.service.js'
+import { live } from '../realtime/realtime.publish.js' // NEW (module 9)
+import { User } from '../user/user.model.js'
 import { Task } from './task.model.js'
 import { computeOrder } from './task.order.js'
 import type {
@@ -78,7 +79,6 @@ export const taskService = {
       createdBy: userId,
     })
 
-    // NEW: record AFTER the task is saved
     await activityService.record({
       projectId,
       actorId: userId,
@@ -86,6 +86,7 @@ export const taskService = {
       taskId: task.id,
       meta: { taskTitle: task.title },
     })
+    live(projectId, 'tasks_changed', { taskId: task.id, actorId: userId }) // NEW
 
     return map(task)
   },
@@ -107,7 +108,7 @@ export const taskService = {
     const task = await findTask(projectId, taskId)
     await assertAssignable(projectId, input.assigneeId)
 
-    // NEW: remember the old assignee BEFORE we overwrite it
+    // remember the old assignee BEFORE we overwrite it
     const prevAssigneeId = task.assigneeId ? String(task.assigneeId) : null
 
     if (input.title !== undefined) task.title = input.title
@@ -117,7 +118,7 @@ export const taskService = {
     if (input.dueDate !== undefined) task.dueDate = input.dueDate ? new Date(input.dueDate) : null
     await task.save()
 
-    // NEW: only when the assignee changed to a real (non-null) user
+    // only when the assignee changed to a real (non-null) user
     if (input.assigneeId && input.assigneeId !== prevAssigneeId) {
       const assignee = await User.findById(input.assigneeId)
       await activityService.record({
@@ -128,6 +129,7 @@ export const taskService = {
         meta: { taskTitle: task.title, targetName: assignee?.name },
       })
     }
+    live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
 
     return map(task)
   },
@@ -152,14 +154,14 @@ export const taskService = {
       throw ApiError.badRequest('Neighbors are out of order')
     }
 
-    // NEW: compare BEFORE assigning, so we know if the list really changed
+    // compare BEFORE assigning, so we know if the list really changed
     const listChanged = String(task.listId) !== String(list._id)
 
     task.listId = list._id
     task.order = computeOrder(above?.order, below?.order)
     await task.save()
 
-    // NEW: reordering inside the same list is not logged
+    // activity: only a real list change is logged (a reorder is not news)
     if (listChanged) {
       await activityService.record({
         projectId,
@@ -169,6 +171,8 @@ export const taskService = {
         meta: { taskTitle: task.title, listName: list.name },
       })
     }
+    // live: ALWAYS publish, because a reorder changes what other people's boards look like
+    live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
 
     return map(task)
   },
@@ -179,7 +183,6 @@ export const taskService = {
     task.archivedAt = new Date() // list and order are kept, so restore puts it back in place
     await task.save()
 
-    // NEW
     await activityService.record({
       projectId,
       actorId: userId,
@@ -187,6 +190,7 @@ export const taskService = {
       taskId,
       meta: { taskTitle: task.title },
     })
+    live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
 
     return map(task)
   },
@@ -197,7 +201,6 @@ export const taskService = {
     task.archivedAt = null
     await task.save()
 
-    // NEW
     await activityService.record({
       projectId,
       actorId: userId,
@@ -205,6 +208,7 @@ export const taskService = {
       taskId,
       meta: { taskTitle: task.title },
     })
+    live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
 
     return map(task)
   },
@@ -212,14 +216,13 @@ export const taskService = {
   remove: async (userId: string, projectId: string, taskId: string): Promise<void> => {
     await projectService.assertCan(userId, projectId, 'task:delete')
     const task = await findTask(projectId, taskId)
-    const taskTitle = task.title // NEW: grab the title before the task is gone
+    const taskTitle = task.title // grab the title before the task is gone
 
     await Comment.deleteMany({ taskId })
     await ChecklistItem.deleteMany({ taskId })
     await attachmentService.removeForTask(taskId)
     await task.deleteOne()
 
-    // NEW
     await activityService.record({
       projectId,
       actorId: userId,
@@ -227,5 +230,6 @@ export const taskService = {
       taskId,
       meta: { taskTitle },
     })
+    live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
   },
 }

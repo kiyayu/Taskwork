@@ -3,6 +3,7 @@ import { ApiError } from '../../common/errors/apiErrors.js'
 import { projectService } from '../project/project.service.js'
 import { Task } from '../task/task.model.js'
 import { computeOrder } from '../task/task.order.js'
+import { live } from '../realtime/realtime.publish.js' // NEW (module 9)
 import { ChecklistItem } from './checklist.model.js'
 import { computeProgress } from './checklist.progress.js'
 import type {
@@ -53,6 +54,8 @@ export const checklistService = {
     })
     // a new unfinished sub-item reopens a completed parent
     if (parentId) await ChecklistItem.updateOne({ _id: parentId }, { completed: false })
+
+    live(projectId, 'checklist_changed', { taskId, actorId: userId }) // NEW
     return snapshot(taskId)
   },
 
@@ -75,6 +78,8 @@ export const checklistService = {
       }
     }
     await item.save()
+
+    live(projectId, 'checklist_changed', { taskId, actorId: userId }) // NEW
     return snapshot(taskId)
   },
 
@@ -95,6 +100,8 @@ export const checklistService = {
 
     item.order = computeOrder(above?.order, below?.order)
     await item.save()
+
+    live(projectId, 'checklist_changed', { taskId, actorId: userId }) // NEW
     return snapshot(taskId)
   },
 
@@ -102,6 +109,8 @@ export const checklistService = {
     await projectService.assertCan(userId, projectId, 'task:update')
     const item = await findItem(projectId, taskId, itemId)
     await ChecklistItem.deleteMany({ $or: [{ _id: item._id }, { parentId: item._id }] })
+
+    live(projectId, 'checklist_changed', { taskId, actorId: userId }) // NEW
     return snapshot(taskId)
   },
 }

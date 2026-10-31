@@ -5,6 +5,9 @@ import { Membership } from '../project/membership.model.js'
 import { Task } from '../task/task.model.js'
 import { User } from '../user/user.model.js'
 import { PLAN_LIMITS } from '../project/project.constants.js'
+import { activityService } from '../activity/activity.service.js' // NEW
+import { hub } from '../realtime/realtime.hub.js' // NEW (module 9)
+import { live } from '../realtime/realtime.publish.js' // NEW (module 9)
 import { Invite } from './invite.model.js'
 import { generateToken, hashToken, isUsable } from './invite.token.js'
 import type { CreateInviteDTO, InviteDTO, MemberDTO } from './invite.dto.js'
@@ -61,11 +64,21 @@ export const inviteService = {
     )
     if (!claimed) throw ApiError.notFound('This invite is invalid or has expired')
 
+    let created = false // NEW: true only when THIS call created the membership
     try {
       await Membership.create({ projectId: invite.projectId, userId, role: invite.role })
+      created = true
     } catch (err: any) {
       if (err?.code !== 11000) throw err // a racing duplicate is fine
     }
+
+    // NEW: only a brand-new membership is news (actor = the joiner)
+    if (created) {
+      const projectId = invite.projectId.toString()
+      await activityService.record({ projectId, actorId: userId, type: 'member_joined' })
+      live(projectId, 'members_changed', { actorId: userId })
+    }
+
     return { projectId: invite.projectId.toString(), role: invite.role }
   },
 
@@ -87,6 +100,8 @@ export const inviteService = {
     if (m.role === 'owner') throw ApiError.badRequest('The owner role cannot be changed')
     m.role = role
     await m.save()
+
+    live(projectId, 'members_changed', { actorId: userId }) // NEW
   },
 
   // owners remove others; anyone may leave; the owner cannot be removed or leave
@@ -104,5 +119,14 @@ export const inviteService = {
     await m.deleteOne()
     // their tasks become unassigned
     await Task.updateMany({ projectId, assigneeId: targetId }, { assigneeId: null })
+
+    // NEW
+    const target = await User.findById(targetId)
+    await activityService.record({
+      projectId, actorId: userId, type: 'member_removed', meta: { targetName: target?.name },
+    })
+    hub.kick(projectId, targetId) // close their stream FIRST, so they don't receive the events below
+    live(projectId, 'members_changed', { actorId: userId })
+    live(projectId, 'tasks_changed', { actorId: userId }) // their tasks were just unassigned
   },
 }

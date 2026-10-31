@@ -5,6 +5,8 @@ import { projectService } from '../project/project.service.js'
 import { Task } from '../task/task.model.js'
 import { User } from '../user/user.model.js'
 import { notificationService } from '../notification/notification.service.js'
+import { activityService } from '../activity/activity.service.js' // NEW
+import { live } from '../realtime/realtime.publish.js' // NEW (module 9)
 import { Comment } from './comment.model.js'
 import type { CommentResponseDTO, CreateCommentDTO } from './comment.dto.js'
 
@@ -43,6 +45,12 @@ export const commentService = {
       projectId, taskId, authorId: userId, text: input.text, mentions: wanted,
     })
 
+    // NEW: right after the write, before the (slower) notifications, so others see it fast
+    await activityService.record({
+      projectId, actorId: userId, type: 'comment_added', taskId, meta: { taskTitle: task.title },
+    })
+    live(projectId, 'comments_changed', { taskId, actorId: userId })
+
     // notifications never throw (notify swallows its own errors)
     const mentioned = await User.find({ _id: { $in: wanted } })
     await Promise.all(
@@ -76,5 +84,7 @@ export const commentService = {
       throw ApiError.forbidden('You do not have permission to do this')
     }
     await comment.deleteOne()
+
+    live(projectId, 'comments_changed', { taskId, actorId: userId }) // NEW
   },
 }
