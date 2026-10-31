@@ -18,7 +18,9 @@ import commentRoutes from './modules/comment/comment.routes.js'
 import listRoutes from './modules/list/list.routes.js'
 import checklistRoutes from './modules/checklist/checklist.routes.js'
 import attachmentRoutes from './modules/attachment/attachment.routes.js'
- 
+import { projectMemberRouter, acceptRouter } from './modules/invite/invite.routes.js'
+
+
 const app = express()
 
 app.use(helmet())
@@ -53,6 +55,8 @@ app.use('/api/projects/:projectId/tasks/:taskId/comments', commentRoutes)
 app.use('/api/projects/:projectId/lists', listRoutes)
 app.use('/api/projects/:projectId/tasks/:taskId/checklist', checklistRoutes)
 app.use('/api/projects/:projectId/tasks/:taskId/attachments', attachmentRoutes)
+app.use('/api/projects/:projectId', projectMemberRouter)
+app.use('/api/invites', acceptRouter) 
 
 
 app.use((_req, res) => {
