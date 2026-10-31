@@ -71,9 +71,9 @@ return map(project, 'owner')
     return map(project, role)
   },
 
-  remove: async (userId: string, projectId: string): Promise<void> => {
-    await projectService.assertCan(userId, projectId, 'project:delete')
-   await Membership.deleteMany({ projectId })
+remove: async (userId: string, projectId: string): Promise<void> => {
+await projectService.assertCan(userId, projectId, 'project:delete')
+await Membership.deleteMany({ projectId })
 await Task.deleteMany({ projectId })
 await Comment.deleteMany({ projectId })
 await List.deleteMany({ projectId })
