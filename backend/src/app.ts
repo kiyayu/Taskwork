@@ -21,6 +21,7 @@ import attachmentRoutes from './modules/attachment/attachment.routes.js'
 import { projectMemberRouter, acceptRouter } from './modules/invite/invite.routes.js'
 import activityRoutes from './modules/activity/activity.routes.js'
 import realtimeRoutes from './modules/realtime/realtime.routes.js'
+import chatRoutes from './modules/chat/chat.routes.js'
 
 
 const app = express()
@@ -61,6 +62,8 @@ app.use('/api/projects/:projectId', projectMemberRouter)
 app.use('/api/invites', acceptRouter) 
 app.use('/api/projects/:projectId/activity', activityRoutes)
 app.use('/api/projects/:projectId/stream', realtimeRoutes)
+app.use('/api/projects/:projectId/tasks/:taskId/messages', chatRoutes)
+
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' })

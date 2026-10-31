@@ -8,6 +8,8 @@ import { List } from '../../../src/modules/list/list.model'
 import { projectService } from '../../../src/modules/project/project.service'
 import { listService } from '../../../src/modules/list/list.service'
 import { taskService } from '../../../src/modules/task/task.service'
+import { checklistService } from '../../../src/modules/checklist/checklist.service'
+import { commentService } from '../../../src/modules/comment/comment.service'
 
 const makeUser = () =>
   User.create({
@@ -82,6 +84,17 @@ describe('taskService', () => {
       const first = await List.findOne({ projectId: project.id }).sort({ order: 1 })
       expect(t.listId).toBe(first!.id)
     })
+    
+    it('list includes assignee name, comment count and checklist progress', async () => {
+  const { owner, project } = await setup()
+  const t = await taskService.create(owner.id, project.id, { title: 'T', assigneeId: owner.id })
+  await checklistService.create(owner.id, project.id, t.id, { title: 'A' })
+  await commentService.create(owner.id, project.id, t.id, { text: 'hi' })
+  const [row] = await taskService.list(owner.id, project.id, {})
+  expect(row.assigneeName).toBe('Test User')
+  expect(row.commentCount).toBe(1)
+  expect(row.progress).toEqual({ done: 0, total: 1, percent: 0 })
+})
 
     it('a list from another project is rejected', async () => {
       const a = await setup()

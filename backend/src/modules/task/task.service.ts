@@ -11,11 +11,13 @@ import { live } from '../realtime/realtime.publish.js' // NEW (module 9)
 import { User } from '../user/user.model.js'
 import { Task } from './task.model.js'
 import { computeOrder } from './task.order.js'
+import { chatService } from '../chat/chat.service.js'
 import type {
   CreateTaskDTO, ListTasksQueryDTO, MoveTaskDTO, TaskResponseDTO, UpdateTaskDTO,
 } from './task.dto.js'
+import { computeProgress } from '../checklist/checklist.progress.js'
 
-const map = (t: any): TaskResponseDTO => ({
+const map = (t: any)  => ({
   id: t._id.toString(),
   projectId: t.projectId.toString(),
   title: t.title,
@@ -28,6 +30,40 @@ const map = (t: any): TaskResponseDTO => ({
   archived: !!t.archivedAt,
   createdAt: t.createdAt,
 })
+ 
+
+const EMPTY = { done: 0, total: 0, percent: 0 }
+
+// map() stays pure; this adds the related data for MANY tasks with 3 queries total (no N+1).
+const decorate = async (tasks: any[]): Promise<TaskResponseDTO[]> => {
+  if (tasks.length === 0) return []
+  const taskIds = tasks.map((t) => t._id)
+
+  const [items, comments, users] = await Promise.all([
+    ChecklistItem.find({ taskId: { $in: taskIds } }),
+    Comment.aggregate([
+      { $match: { taskId: { $in: taskIds } } },
+      { $group: { _id: '$taskId', n: { $sum: 1 } } },
+    ]),
+    User.find({ _id: { $in: tasks.map((t) => t.assigneeId).filter(Boolean) } }),
+  ])
+
+  const itemsByTask = new Map<string, { id: string; parentId: string | null; completed: boolean }[]>()
+  for (const i of items) {
+    const key = i.taskId.toString()
+    if (!itemsByTask.has(key)) itemsByTask.set(key, [])
+    itemsByTask.get(key)!.push({ id: i.id, parentId: i.parentId ? i.parentId.toString() : null, completed: i.completed })
+  }
+  const counts = new Map<string, number>(comments.map((c: any) => [c._id.toString(), c.n]))
+  const names = new Map(users.map((u) => [u.id, u.name]))
+
+  return tasks.map((t) => ({
+    ...map(t),
+    assigneeName: t.assigneeId ? names.get(t.assigneeId.toString()) ?? null : null,
+    progress: itemsByTask.has(t.id) ? computeProgress(itemsByTask.get(t.id)!) : EMPTY,
+    commentCount: counts.get(t.id) ?? 0,
+  }))
+}
 
 // Always filter by projectId too: a real task id from another project is "not found".
 const findTask = async (projectId: string, taskId: string) => {
@@ -88,19 +124,19 @@ export const taskService = {
     })
     live(projectId, 'tasks_changed', { taskId: task.id, actorId: userId }) // NEW
 
-    return map(task)
+    return (await decorate([task]))[0]
   },
 
   list: async (userId: string, projectId: string, query: ListTasksQueryDTO): Promise<TaskResponseDTO[]> => {
     await projectService.assertCan(userId, projectId, 'project:read')
     const filter = query.archived ? { projectId, archivedAt: { $ne: null } } : { projectId, archivedAt: null }
     const tasks = await Task.find(filter).sort({ listId: 1, order: 1 })
-    return tasks.map(map)
-  },
+   return decorate(tasks) 
+   },
 
   get: async (userId: string, projectId: string, taskId: string): Promise<TaskResponseDTO> => {
     await projectService.assertCan(userId, projectId, 'project:read')
-    return map(await findTask(projectId, taskId))
+    return (await decorate([await findTask(projectId, taskId)]))[0]
   },
 
   update: async (userId: string, projectId: string, taskId: string, input: UpdateTaskDTO): Promise<TaskResponseDTO> => {
@@ -131,7 +167,7 @@ export const taskService = {
     }
     live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
 
-    return map(task)
+    return (await decorate([task]))[0]
   },
 
   // ONE write: only this task changes.
@@ -174,7 +210,7 @@ export const taskService = {
     // live: ALWAYS publish, because a reorder changes what other people's boards look like
     live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
 
-    return map(task)
+    return (await decorate([task]))[0]
   },
 
   archive: async (userId: string, projectId: string, taskId: string): Promise<TaskResponseDTO> => {
@@ -192,7 +228,7 @@ export const taskService = {
     })
     live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
 
-    return map(task)
+    return (await decorate([task]))[0]
   },
 
   restore: async (userId: string, projectId: string, taskId: string): Promise<TaskResponseDTO> => {
@@ -210,7 +246,7 @@ export const taskService = {
     })
     live(projectId, 'tasks_changed', { taskId, actorId: userId }) // NEW
 
-    return map(task)
+    return (await decorate([task]))[0]
   },
 
   remove: async (userId: string, projectId: string, taskId: string): Promise<void> => {
@@ -219,6 +255,7 @@ export const taskService = {
     const taskTitle = task.title // grab the title before the task is gone
 
     await Comment.deleteMany({ taskId })
+    await chatService.removeForTask(taskId)
     await ChecklistItem.deleteMany({ taskId })
     await attachmentService.removeForTask(taskId)
     await task.deleteOne()

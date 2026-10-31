@@ -10,6 +10,8 @@ export type TaskParamsDTO = z.infer<typeof taskIdSchema>['params']
 export type ProjectParamsDTO = z.infer<typeof createTaskSchema>['params']
 export type UpdateTaskDTO = z.infer<typeof updateTaskSchema>['body']
 export type MoveTaskDTO = z.infer<typeof moveTaskSchema>['body']
+import type { Progress } from '../checklist/checklist.progress.js'
+
 
 export interface TaskResponseDTO {
   id: string
@@ -19,8 +21,11 @@ export interface TaskResponseDTO {
   listId: string
   order: number
   assigneeId: string | null
+  assigneeName: string | null
   dueDate: Date | null
   priority: number
   archived: boolean
+  progress: Progress
+  commentCount: number
   createdAt: Date
 }

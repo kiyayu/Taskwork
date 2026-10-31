@@ -13,6 +13,7 @@ import { List } from '../list/list.model.js'
 import { activityService } from '../activity/activity.service.js'
 import { hub } from '../realtime/realtime.hub.js' // NEW (module 9)
 import { live } from '../realtime/realtime.publish.js' // NEW (module 9)
+import { chatService } from '../chat/chat.service.js'
 
 const map = (p: any, role: Role): ProjectResponseDTO => ({
   id: p._id.toString(),
@@ -74,15 +75,16 @@ export const projectService = {
     return map(project, role)
   },
 
-  remove: async (userId: string, projectId: string): Promise<void> => {
-    await projectService.assertCan(userId, projectId, 'project:delete')
-    await Membership.deleteMany({ projectId })
-    await Task.deleteMany({ projectId })
-    await Comment.deleteMany({ projectId })
-    await List.deleteMany({ projectId })
-    await Project.findByIdAndDelete(projectId)
-    await activityService.removeForProject(projectId)
+ remove: async (userId: string, projectId: string): Promise<void> => {
+  await projectService.assertCan(userId, projectId, 'project:delete')
+  await Task.deleteMany({ projectId })
+  await Comment.deleteMany({ projectId })
+  await chatService.removeForProject(projectId)
+  await activityService.removeForProject(projectId)
+  await List.deleteMany({ projectId })
+  await Project.findByIdAndDelete(projectId)
+  await Membership.deleteMany({ projectId }) 
 
-    hub.closeRoom(projectId) // NEW: nobody should stay connected to a deleted project
-  },
+  hub.closeRoom(projectId)
+},
 }
