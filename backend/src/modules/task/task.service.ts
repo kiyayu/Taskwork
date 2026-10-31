@@ -6,6 +6,8 @@ import { List } from '../list/list.model.js'
 import { Comment } from '../comment/comment.model.js'
 import { ChecklistItem } from '../checklist/checklist.model.js'
 import { attachmentService } from '../attachment/attachment.service.js'
+import { activityService } from '../activity/activity.service.js' // NEW
+import { User } from '../user/user.model.js' // NEW
 import { Task } from './task.model.js'
 import { computeOrder } from './task.order.js'
 import type {
@@ -75,6 +77,16 @@ export const taskService = {
       dueDate: input.dueDate ? new Date(input.dueDate) : null,
       createdBy: userId,
     })
+
+    // NEW: record AFTER the task is saved
+    await activityService.record({
+      projectId,
+      actorId: userId,
+      type: 'task_created',
+      taskId: task.id,
+      meta: { taskTitle: task.title },
+    })
+
     return map(task)
   },
 
@@ -95,12 +107,28 @@ export const taskService = {
     const task = await findTask(projectId, taskId)
     await assertAssignable(projectId, input.assigneeId)
 
+    // NEW: remember the old assignee BEFORE we overwrite it
+    const prevAssigneeId = task.assigneeId ? String(task.assigneeId) : null
+
     if (input.title !== undefined) task.title = input.title
     if (input.description !== undefined) task.description = input.description
     if (input.priority !== undefined) task.priority = input.priority
     if (input.assigneeId !== undefined) task.assigneeId = input.assigneeId as any
     if (input.dueDate !== undefined) task.dueDate = input.dueDate ? new Date(input.dueDate) : null
     await task.save()
+
+    // NEW: only when the assignee changed to a real (non-null) user
+    if (input.assigneeId && input.assigneeId !== prevAssigneeId) {
+      const assignee = await User.findById(input.assigneeId)
+      await activityService.record({
+        projectId,
+        actorId: userId,
+        type: 'task_assigned',
+        taskId,
+        meta: { taskTitle: task.title, targetName: assignee?.name },
+      })
+    }
+
     return map(task)
   },
 
@@ -124,9 +152,24 @@ export const taskService = {
       throw ApiError.badRequest('Neighbors are out of order')
     }
 
+    // NEW: compare BEFORE assigning, so we know if the list really changed
+    const listChanged = String(task.listId) !== String(list._id)
+
     task.listId = list._id
     task.order = computeOrder(above?.order, below?.order)
     await task.save()
+
+    // NEW: reordering inside the same list is not logged
+    if (listChanged) {
+      await activityService.record({
+        projectId,
+        actorId: userId,
+        type: 'task_moved',
+        taskId,
+        meta: { taskTitle: task.title, listName: list.name },
+      })
+    }
+
     return map(task)
   },
 
@@ -135,6 +178,16 @@ export const taskService = {
     const task = await findTask(projectId, taskId)
     task.archivedAt = new Date() // list and order are kept, so restore puts it back in place
     await task.save()
+
+    // NEW
+    await activityService.record({
+      projectId,
+      actorId: userId,
+      type: 'task_archived',
+      taskId,
+      meta: { taskTitle: task.title },
+    })
+
     return map(task)
   },
 
@@ -143,15 +196,36 @@ export const taskService = {
     const task = await findTask(projectId, taskId)
     task.archivedAt = null
     await task.save()
+
+    // NEW
+    await activityService.record({
+      projectId,
+      actorId: userId,
+      type: 'task_restored',
+      taskId,
+      meta: { taskTitle: task.title },
+    })
+
     return map(task)
   },
 
   remove: async (userId: string, projectId: string, taskId: string): Promise<void> => {
     await projectService.assertCan(userId, projectId, 'task:delete')
     const task = await findTask(projectId, taskId)
+    const taskTitle = task.title // NEW: grab the title before the task is gone
+
     await Comment.deleteMany({ taskId })
     await ChecklistItem.deleteMany({ taskId })
     await attachmentService.removeForTask(taskId)
     await task.deleteOne()
+
+    // NEW
+    await activityService.record({
+      projectId,
+      actorId: userId,
+      type: 'task_deleted',
+      taskId,
+      meta: { taskTitle },
+    })
   },
 }
