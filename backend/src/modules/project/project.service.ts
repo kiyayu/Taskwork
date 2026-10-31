@@ -10,6 +10,8 @@ import { Task } from '../task/task.model.js'
 import { Comment } from '../comment/comment.model.js'
 import { listService } from '../list/list.service.js'
 import { List } from '../list/list.model.js'
+import { activityService } from '../activity/activity.service.js'
+
 const map = (p: any, role: Role): ProjectResponseDTO => ({
   id: p._id.toString(),
   name: p.name,
@@ -76,5 +78,6 @@ await Task.deleteMany({ projectId })
 await Comment.deleteMany({ projectId })
 await List.deleteMany({ projectId })
 await Project.findByIdAndDelete(projectId)
+await activityService.removeForProject(projectId)
   },
 }
