@@ -12,12 +12,13 @@ const priorityStyle: Record<BoardTask['priority'], string> = {
   3: 'bg-info',
 }
 
-export function TaskCard({ task }: { task: BoardTask }) {
+// Purely visual: also used inside the drag overlay.
+export function TaskCard({ task, className }: { task: BoardTask; className?: string }) {
   const { t } = useTranslation('board')
   const { progress } = task
 
   return (
-    <li className="p-3 space-y-3 bg-card border border-border rounded-lg shadow-sm">
+    <div className={cn('p-3 space-y-3 bg-card border border-border rounded-lg shadow-sm', className)}>
       <p className="text-sm font-medium text-foreground break-words">{task.title}</p>
 
       {progress.total > 0 && (
@@ -51,6 +52,6 @@ export function TaskCard({ task }: { task: BoardTask }) {
       </div>
 
       <p className="text-xs text-muted-foreground truncate">{task.assigneeName ?? t('unassigned')}</p>
-    </li>
+    </div>
   )
 }

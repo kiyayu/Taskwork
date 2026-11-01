@@ -1,9 +1,13 @@
 //src/features/board/components/ListColumn.tsx
+import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
+import { listDropId } from '../utils/computeDrop'
 import type { Column } from '../utils/groupTasks'
-import { TaskCard } from './TaskCard'
+import { SortableTaskCard } from './SortableTaskCard'
 
 type Props = {
   column: Column
@@ -14,6 +18,8 @@ type Props = {
 export function ListColumn({ column, canEdit, onAddTask }: Props) {
   const { t } = useTranslation('board')
   const { list, tasks } = column
+  // the whole task area is a drop target, so an EMPTY column accepts cards too
+  const { setNodeRef, isOver } = useDroppable({ id: listDropId(list.id), disabled: !canEdit })
 
   return (
     <section aria-label={list.name} className="flex flex-col w-72 max-h-full gap-3 p-3 shrink-0 bg-muted/50 border border-border rounded-xl">
@@ -22,10 +28,12 @@ export function ListColumn({ column, canEdit, onAddTask }: Props) {
         <span className="text-xs text-muted-foreground">{tasks.length}</span>
       </header>
 
-      <ul className="flex-1 space-y-2 overflow-y-auto">
-        {tasks.length === 0 && <li className="px-1 text-xs text-muted-foreground">{t('emptyList')}</li>}
-        {tasks.map((task) => <TaskCard key={task.id} task={task} />)}
-      </ul>
+      <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+        <ul ref={setNodeRef} className={cn('flex-1 min-h-10 space-y-2 overflow-y-auto rounded-lg', isOver && 'bg-primary/5')}>
+          {tasks.length === 0 && <li className="px-1 text-xs text-muted-foreground">{t('emptyList')}</li>}
+          {tasks.map((task) => <SortableTaskCard key={task.id} task={task} disabled={!canEdit} />)}
+        </ul>
+      </SortableContext>
 
       {canEdit && (
         <Button variant="ghost" size="sm" className="justify-start" onClick={() => onAddTask(list.id)} icon={<Plus />}>

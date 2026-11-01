@@ -30,4 +30,10 @@ export const boardApi = {
     const res = await api.post<{ data: BoardTask }>(`/projects/${projectId}/tasks`, body)
     return res.data.data
   },
+    moveTask: async (input: {
+    projectId: string; taskId: string; listId: string; aboveId: string | null; belowId: string | null
+  }): Promise<void> => {
+    const { projectId, taskId, ...body } = input
+    await api.patch(`/projects/${projectId}/tasks/${taskId}/move`, body)
+  },
 }
