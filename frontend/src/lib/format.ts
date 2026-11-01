@@ -6,3 +6,7 @@ export const formatDateTime = (iso?: string): string =>
   iso
     ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso))
     : '—'
+
+    
+export const formatDate = (iso?: string | null): string =>
+  iso ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(iso)) : '—'

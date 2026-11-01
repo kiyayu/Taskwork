@@ -17,7 +17,9 @@ export const PrivateRoute: RouteObject[] = [
     children: [
       { index: true, loader: () => redirect(paths.app.dashboard) },
       { path: 'dashboard', handle: { title: 'Dashboard' }, lazy: page(() => import('@/features/dashboard/Pages/Dashboard')) },
-       
+      { path: 'projects', handle: { titleKey: 'titles.projects' }, lazy: page(() => import('@/features/projects/pages/ProjectsPage')) },
+      { path: 'projects/:projectId', handle: { titleKey: 'titles.board' }, lazy: page(() => import('@/features/board/pages/BoardPage')) },
+
       {
         path: 'settings',
         lazy: page(() => import('@/features/settings/SettingsLayout')),

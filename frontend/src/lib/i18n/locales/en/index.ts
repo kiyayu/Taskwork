@@ -8,8 +8,9 @@ import { settings } from './settings'
 import { notifications } from './notifications'
 import { marketing } from './marketing'
 import { legal } from './legal'
+import { projects } from './projects'
+ import { board } from './board'
 
-// A new namespace = one file here + one line below. Types follow automatically.
 export const en = {
-  common, validation, errors, auth, layout, settings, notifications, marketing, legal,
+  common, validation, errors, auth, layout, settings, notifications, marketing, legal, projects, board
 } as const

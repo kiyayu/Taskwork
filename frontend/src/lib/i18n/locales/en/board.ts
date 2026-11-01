@@ -1,0 +1,30 @@
+//src/lib/i18n/locales/en/board.ts
+export const board = {
+  backToProjects: 'Back to projects',
+  notFound: 'This project does not exist or you do not have access.',
+  loadFailed: 'Could not load the board.',
+  noLists: 'This project has no lists yet.',
+  addList: 'Add list',
+  addTask: 'Add task',
+  emptyList: 'No tasks',
+  unassigned: 'Unassigned',
+  due: 'Due {{date}}',
+  comments: '{{count}} comments',
+  progress: '{{done}} of {{total}} done',
+  priority: { 1: 'High', 2: 'Medium', 3: 'Low' },
+  list: {
+    createTitle: 'Add list',
+    name: 'List name',
+    namePlaceholder: 'For example: Review',
+    submit: 'Add list',
+    created: 'List added',
+  },
+  task: {
+    createTitle: 'Add task',
+    title: 'Title',
+    description: 'Description',
+    priority: 'Priority',
+    submit: 'Add task',
+    created: 'Task added',
+  },
+} as const

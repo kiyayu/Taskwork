@@ -1,6 +1,6 @@
 //src/components/layout/nav.config.ts
 import {
-  LayoutDashboard,   User, Settings, type LucideIcon,
+  LayoutDashboard, FolderKanban,  User, Settings, type LucideIcon,
 } from 'lucide-react'
 import type { ParseKeys } from 'i18next'
 import { paths } from '@/config/paths'
@@ -14,7 +14,7 @@ export const appConfig = {
   layout: 'sidebar' as LayoutVariant,
   nav: [
     { labelKey: 'nav.dashboard', to: paths.app.dashboard, icon: LayoutDashboard },
-  
+    { labelKey: 'nav.projects', to: paths.app.projects, icon: FolderKanban },
   ] satisfies NavItem[],
   account: [
     { labelKey: 'account.profile', to: paths.settings.profile, icon: User },

@@ -14,6 +14,8 @@ export const paths = {
   app: {
     root: "/app",
     dashboard: "/app/dashboard",
+    projects: "/app/projects",
+    projectBoard: (id: string) => `/app/projects/${id}`,
      
   },
   settings: {
