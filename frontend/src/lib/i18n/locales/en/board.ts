@@ -27,4 +27,5 @@ export const board = {
     submit: 'Add task',
     created: 'Task added',
   },
+   move: { failed: 'Could not move the task. It was put back.' },
 } as const
