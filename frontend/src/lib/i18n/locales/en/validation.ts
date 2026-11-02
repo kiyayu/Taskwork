@@ -20,5 +20,8 @@ export const validation = {
   checklistItemRequired: 'Item title is required',
   checklistItemMax: 'Use at most 200 characters',
   projectNameRequired: "Project name is required",
-  projectNameMax: "Project name cannot exceed 100 characters"
+  projectNameMax: "Project name cannot exceed 100 characters",
+  commentRequired: 'Write something first',
+  commentMax: 'Use at most 2000 characters',
 } as const;
+
