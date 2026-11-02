@@ -17,4 +17,8 @@ export const validation = {
   taskTitleRequired: "Task title is required",
   taskTitleMax: "Use at most 200 characters",
   taskDescriptionMax: "Use at most 5000 characters",
+  checklistItemRequired: 'Item title is required',
+  checklistItemMax: 'Use at most 200 characters',
+  projectNameRequired: "Project name is required",
+  projectNameMax: "Project name cannot exceed 100 characters"
 } as const;

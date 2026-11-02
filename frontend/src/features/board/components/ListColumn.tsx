@@ -1,4 +1,4 @@
-//src/features/board/components/ListColumn.tsx
+//src/features/board/components/ListColumn.tsx  (complete)
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
@@ -13,12 +13,12 @@ type Props = {
   column: Column
   canEdit: boolean
   onAddTask: (listId: string) => void
+  onOpenTask: (taskId: string) => void
 }
 
-export function ListColumn({ column, canEdit, onAddTask }: Props) {
+export function ListColumn({ column, canEdit, onAddTask, onOpenTask }: Props) {
   const { t } = useTranslation('board')
   const { list, tasks } = column
-  // the whole task area is a drop target, so an EMPTY column accepts cards too
   const { setNodeRef, isOver } = useDroppable({ id: listDropId(list.id), disabled: !canEdit })
 
   return (
@@ -31,7 +31,9 @@ export function ListColumn({ column, canEdit, onAddTask }: Props) {
       <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
         <ul ref={setNodeRef} className={cn('flex-1 min-h-10 space-y-2 overflow-y-auto rounded-lg', isOver && 'bg-primary/5')}>
           {tasks.length === 0 && <li className="px-1 text-xs text-muted-foreground">{t('emptyList')}</li>}
-          {tasks.map((task) => <SortableTaskCard key={task.id} task={task} disabled={!canEdit} />)}
+          {tasks.map((task) => (
+            <SortableTaskCard key={task.id} task={task} disabled={!canEdit} onOpen={onOpenTask} />
+          ))}
         </ul>
       </SortableContext>
 

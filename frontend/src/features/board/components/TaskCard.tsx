@@ -1,25 +1,33 @@
-//src/features/board/components/TaskCard.tsx
+//src/features/board/components/TaskCard.tsx  (complete)
 import { CalendarDays, MessageSquare } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { useTranslation } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { BoardTask } from '../types/board.types'
 
-// Priority is shown by words AND a dot, never by color alone.
 const priorityStyle: Record<BoardTask['priority'], string> = {
   1: 'bg-destructive',
   2: 'bg-warning',
   3: 'bg-info',
 }
 
-// Purely visual: also used inside the drag overlay.
-export function TaskCard({ task, className }: { task: BoardTask; className?: string }) {
+type Props = { task: BoardTask; className?: string; onOpen?: (taskId: string) => void }
+
+// Visual card, also used inside the drag overlay (where onOpen is not passed).
+export function TaskCard({ task, className, onOpen }: Props) {
   const { t } = useTranslation('board')
   const { progress } = task
 
   return (
     <div className={cn('p-3 space-y-3 bg-card border border-border rounded-lg shadow-sm', className)}>
-      <p className="text-sm font-medium text-foreground break-words">{task.title}</p>
+      {onOpen ? (
+        <button type="button" onClick={() => onOpen(task.id)}
+          className="text-left text-sm font-medium text-foreground break-words hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+          {task.title}
+        </button>
+      ) : (
+        <p className="text-sm font-medium text-foreground break-words">{task.title}</p>
+      )}
 
       {progress.total > 0 && (
         <div className="space-y-1">

@@ -1,6 +1,6 @@
 //src/features/board/hooks/useBoard.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { boardApi, type CreateTaskInput } from '../api/board.api'
+import { boardApi, type CreateTaskInput, type UpdateTaskInput } from '../api/board.api'
 import type { BoardTask } from '../types/board.types'
 import type { Drop } from '../utils/computeDrop'
 import { computeOrder } from '../utils/order'
@@ -18,19 +18,48 @@ export const useTasks = (projectId: string) =>
   useQuery({ queryKey: boardKeys.tasks(projectId), queryFn: () => boardApi.tasks(projectId), enabled: !!projectId })
 
 // Data work in the hooks: any change refreshes the whole board prefix of that project.
-export const useCreateList = (projectId: string) => {
+const useInvalidateBoard = (projectId: string) => {
   const queryClient = useQueryClient()
+  return () => queryClient.invalidateQueries({ queryKey: boardKeys.all(projectId) })
+}
+
+export const useCreateList = (projectId: string) => {
+  const invalidate = useInvalidateBoard(projectId)
   return useMutation({
     mutationFn: (name: string) => boardApi.createList({ projectId, name }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKeys.all(projectId) }),
+    onSuccess: invalidate,
   })
 }
 
 export const useCreateTask = (projectId: string) => {
-  const queryClient = useQueryClient()
+  const invalidate = useInvalidateBoard(projectId)
   return useMutation({
     mutationFn: (input: CreateTaskInput) => boardApi.createTask({ projectId, ...input }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: boardKeys.all(projectId) }),
+    onSuccess: invalidate,
+  })
+}
+
+export const useUpdateTask = (projectId: string) => {
+  const invalidate = useInvalidateBoard(projectId)
+  return useMutation({
+    mutationFn: (input: { taskId: string } & UpdateTaskInput) => boardApi.updateTask({ projectId, ...input }),
+    onSuccess: invalidate,
+  })
+}
+
+export const useArchiveTask = (projectId: string) => {
+  const invalidate = useInvalidateBoard(projectId)
+  return useMutation({
+    mutationFn: (taskId: string) => boardApi.archiveTask({ projectId, taskId }),
+    onSuccess: invalidate,
+  })
+}
+
+export const useDeleteTask = (projectId: string) => {
+  const invalidate = useInvalidateBoard(projectId)
+  return useMutation({
+    mutationFn: (taskId: string) => boardApi.deleteTask({ projectId, taskId }),
+    onSettled: invalidate, // a 404 (already deleted elsewhere) must still re-sync
   })
 }
 
@@ -41,7 +70,6 @@ export const useMoveTask = (projectId: string) => {
   return useMutation({
     mutationFn: (drop: Drop) => boardApi.moveTask({ projectId, ...drop }),
 
-    // 1. stop in-flight refetches from overwriting our edit, 2. snapshot, 3. edit the cache now
     onMutate: async (drop) => {
       await queryClient.cancelQueries({ queryKey: key })
       const previous = queryClient.getQueryData<BoardTask[]>(key)
@@ -56,12 +84,10 @@ export const useMoveTask = (projectId: string) => {
       return { previous }
     },
 
-    // failure: put the snapshot back
     onError: (_error, _drop, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous)
     },
 
-    // always: let the server's truth replace our guess
     onSettled: () => queryClient.invalidateQueries({ queryKey: boardKeys.all(projectId) }),
   })
 }

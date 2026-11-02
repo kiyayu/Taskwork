@@ -1,6 +1,6 @@
-//src/features/board/components/Board.tsx
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+//src/features/board/components/Board.tsx  (complete)
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   DndContext, DragOverlay, KeyboardSensor, MouseSensor, TouchSensor,
   closestCorners, useSensor, useSensors, type DragEndEvent, type DragStartEvent,
@@ -15,6 +15,7 @@ import { paths } from '@/config/paths'
 import { useTranslation } from '@/lib/i18n'
 import { useProject } from '@/features/projects'
 import { useCreateList, useCreateTask, useLists, useMoveTask, useTasks } from '../hooks/useBoard'
+import { TaskPanel } from '../task/TaskPanel'
 import { computeDrop } from '../utils/computeDrop'
 import { groupTasksByList } from '../utils/groupTasks'
 import { ListColumn } from './ListColumn'
@@ -28,6 +29,7 @@ export function Board({ projectId }: { projectId: string }) {
   const { t } = useTranslation('board')
   const [dialog, setDialog] = useState<DialogState>({ type: 'none' })
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
   const close = () => setDialog({ type: 'none' })
 
   const project = useProject(projectId)
@@ -37,7 +39,21 @@ export function Board({ projectId }: { projectId: string }) {
   const createTask = useCreateTask(projectId)
   const move = useMoveTask(projectId)
 
-  // distance / delay: a plain click or a scroll gesture must not start a drag
+  // The open task is part of the URL: refresh keeps it, Back closes it, the link can be shared.
+  const taskId = searchParams.get('task')
+  const openTask = taskId ? tasks.data?.find((task) => task.id === taskId && !task.archived) : undefined
+
+  const closeTask = useCallback(() => {
+    setSearchParams((prev) => { const next = new URLSearchParams(prev); next.delete('task'); return next }, { replace: true })
+  }, [setSearchParams])
+  const openTaskById = (id: string) =>
+    setSearchParams((prev) => { const next = new URLSearchParams(prev); next.set('task', id); return next })
+
+  // a stale or foreign ?task= (deleted, archived, other project) is removed instead of showing nothing
+  useEffect(() => {
+    if (taskId && tasks.isSuccess && !openTask) closeTask()
+  }, [taskId, tasks.isSuccess, openTask, closeTask])
+
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
@@ -110,11 +126,14 @@ export function Board({ projectId }: { projectId: string }) {
         <div className="flex items-start gap-4 pb-2 overflow-x-auto">
           {columns.map((column) => (
             <ListColumn key={column.list.id} column={column} canEdit={canEdit}
-              onAddTask={(listId) => setDialog({ type: 'task', listId })} />
+              onAddTask={(listId) => setDialog({ type: 'task', listId })}
+              onOpenTask={openTaskById} />
           ))}
         </div>
         <DragOverlay>{activeTask ? <TaskCard task={activeTask} className="shadow-lg" /> : null}</DragOverlay>
       </DndContext>
+
+      {openTask && <TaskPanel projectId={projectId} task={openTask} canEdit={canEdit} onClose={closeTask} />}
 
       <ListDialog
         open={dialog.type === 'list'}

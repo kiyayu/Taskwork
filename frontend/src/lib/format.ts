@@ -9,4 +9,6 @@ export const formatDateTime = (iso?: string): string =>
 
     
 export const formatDate = (iso?: string | null): string =>
-  iso ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(iso)) : '—'
+  iso
+    ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(iso))
+    : '—'

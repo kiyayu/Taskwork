@@ -1,4 +1,4 @@
-//src/lib/i18n/locales/en/board.ts
+//src/lib/i18n/locales/en/board.ts  (complete)
 export const board = {
   backToProjects: 'Back to projects',
   notFound: 'This project does not exist or you do not have access.',
@@ -27,5 +27,35 @@ export const board = {
     submit: 'Add task',
     created: 'Task added',
   },
-   move: { failed: 'Could not move the task. It was put back.' },
+  move: { failed: 'Could not move the task. It was put back.' },
+  panel: {
+    title: 'Task',
+    details: 'Details',
+    checklist: 'Checklist',
+    actions: 'Actions',
+    save: 'Save changes',
+    saved: 'Task saved',
+    archive: 'Archive task',
+    archived: 'Task archived',
+    delete: 'Delete task',
+    deleted: 'Task deleted',
+    deleteTitle: 'Delete this task?',
+    deleteDescription: 'Its checklist, comments and files will be permanently deleted.',
+  },
+  details: {
+    assignee: 'Assignee',
+    dueDate: 'Due date',
+    noDueDate: 'No due date',
+    noDescription: 'No description',
+  },
+  checklist: {
+    empty: 'No checklist items yet.',
+    loadFailed: 'Could not load the checklist.',
+    add: 'Add item',
+    addPlaceholder: 'New item',
+    addSub: 'Add sub-item',
+    subPlaceholder: 'New sub-item',
+    delete: 'Delete item',
+    cancel: 'Cancel',
+  },
 } as const
