@@ -1,5 +1,6 @@
 //src/features/board/task/TaskPanel.tsx
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Archive, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -7,19 +8,28 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { ConfirmDialog } from '@/components/layout/ConfirmDialog'
 import { getErrorMessage } from '@/lib/errors'
 import { useTranslation } from '@/lib/i18n'
+import { sessionQueryOptions } from '@/features/auth'
+import type { ProjectRole } from '@/features/projects'
+import { Attachments } from '../attachments/components/Attachments'
 import { Checklist } from '../checklist/components/Checklist'
+import { Comments } from '../comments/components/Comments'
 import { useArchiveTask, useDeleteTask } from '../hooks/useBoard'
 import type { BoardTask } from '../types/board.types'
 import { TaskDetailsForm } from './TaskDetailsForm'
 import { TaskReadOnly } from './TaskReadOnly'
 
-type Props = { projectId: string; task: BoardTask; canEdit: boolean; onClose: () => void }
+type Props = { projectId: string; task: BoardTask; role: ProjectRole; onClose: () => void }
 
-export function TaskPanel({ projectId, task, canEdit, onClose }: Props) {
+export function TaskPanel({ projectId, task, role, onClose }: Props) {
   const { t } = useTranslation('board')
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const { data: user } = useQuery(sessionQueryOptions)
   const archive = useArchiveTask(projectId)
   const remove = useDeleteTask(projectId)
+
+  const canEdit = role !== 'viewer'
+  const isOwner = role === 'owner'
+  const currentUserId = user?.id ?? ''
 
   return (
     <>
@@ -38,6 +48,16 @@ export function TaskPanel({ projectId, task, canEdit, onClose }: Props) {
             <section className="space-y-3" aria-labelledby="panel-checklist">
               <h3 id="panel-checklist" className="text-sm font-semibold text-foreground">{t('panel.checklist')}</h3>
               <Checklist projectId={projectId} taskId={task.id} canEdit={canEdit} />
+            </section>
+
+            <section className="space-y-3" aria-labelledby="panel-attachments">
+              <h3 id="panel-attachments" className="text-sm font-semibold text-foreground">{t('attachments.title')}</h3>
+              <Attachments projectId={projectId} taskId={task.id} canEdit={canEdit} isOwner={isOwner} currentUserId={currentUserId} />
+            </section>
+
+            <section className="space-y-3" aria-labelledby="panel-comments">
+              <h3 id="panel-comments" className="text-sm font-semibold text-foreground">{t('comments.title')}</h3>
+              <Comments projectId={projectId} taskId={task.id} canEdit={canEdit} isOwner={isOwner} currentUserId={currentUserId} />
             </section>
 
             {canEdit && (

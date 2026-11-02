@@ -133,8 +133,7 @@ export function Board({ projectId }: { projectId: string }) {
         <DragOverlay>{activeTask ? <TaskCard task={activeTask} className="shadow-lg" /> : null}</DragOverlay>
       </DndContext>
 
-      {openTask && <TaskPanel projectId={projectId} task={openTask} canEdit={canEdit} onClose={closeTask} />}
-
+{openTask && <TaskPanel projectId={projectId} task={openTask} role={project.data.role} onClose={closeTask} />}
       <ListDialog
         open={dialog.type === 'list'}
         onOpenChange={(o) => { if (!o) { close(); createList.reset() } }}
