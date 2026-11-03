@@ -2,7 +2,7 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { API_BASE_URL } from '@/lib/axios'
-import { authApi } from '@/features/auth/api/auth.api'
+import { authApi } from '@/features/auth'
 import { keysForEvent, parseEvent, uniqueKeys } from '../utils/events'
 
 const BATCH_MS = 150

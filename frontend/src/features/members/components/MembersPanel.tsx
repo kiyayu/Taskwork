@@ -18,12 +18,13 @@ import type { Member } from '../types/member.types'
 import { memberActions } from '../utils/permissions'
 import { InvitesSection } from './InvitesSection'
 import { MemberRow } from './MemberRow'
-
+import { useProjectLive } from '@/features/live'
 // One state value says which confirmation is open.
 type Confirm = { type: 'none' } | { type: 'remove'; member: Member } | { type: 'leave' }
 
 export function MembersPanel({ projectId }: { projectId: string }) {
-  const { t } = useTranslation('members')
+
+    const { t } = useTranslation('members')
   const navigate = useNavigate()
   const [confirm, setConfirm] = useState<Confirm>({ type: 'none' })
   const closeConfirm = () => setConfirm({ type: 'none' })
@@ -33,7 +34,7 @@ export function MembersPanel({ projectId }: { projectId: string }) {
   const members = useMembers(projectId)
   const updateRole = useUpdateRole(projectId)
   const remove = useRemoveMember(projectId)
-
+  useProjectLive(projectId, me?.id)
   const back = (
     <Button asChild variant="ghost" size="sm" className="self-start">
       <Link to={paths.app.projectBoard(projectId)}><ArrowLeft className="size-4" />{t('back')}</Link>

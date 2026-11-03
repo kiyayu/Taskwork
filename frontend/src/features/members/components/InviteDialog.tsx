@@ -1,5 +1,5 @@
 //src/features/members/components/InviteDialog.tsx
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -29,10 +29,16 @@ export function InviteDialog({ projectId, open, onOpenChange }: Props) {
     defaultValues: DEFAULTS,
   })
 
-  useEffect(() => {
-    if (open) { reset(DEFAULTS); setCreated(null); create.reset() }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+   
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open && !prevOpen) {
+    reset(DEFAULTS)
+    setCreated(null)
+    create.reset()
+  }
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+  }
 
   const roleOptions = (['editor', 'viewer'] as const).map((v) => ({ value: v, label: t(`role.${v}`) }))
   const dayOptions = (['1', '7', '30'] as const).map((v) => ({ value: v, label: t(`days.${v}`) }))
