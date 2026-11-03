@@ -42,5 +42,6 @@ export const layout = {
     preferences: 'Preferences', notifications: 'Notifications',
     account: 'Account', security: 'Security', privacyData: 'Privacy & data',
     board: 'Board',
+    members: 'Members', invite: 'Join project',
   },
 } as const

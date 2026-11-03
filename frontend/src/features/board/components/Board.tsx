@@ -22,10 +22,14 @@ import { ListColumn } from './ListColumn'
 import { ListDialog } from './ListDialog'
 import { TaskCard } from './TaskCard'
 import { TaskDialog } from './TaskDialog'
-
+import { useQuery } from '@tanstack/react-query'
+import { sessionQueryOptions } from '@/features/auth'
+import { useProjectLive } from '@/features/live'
 type DialogState = { type: 'none' } | { type: 'list' } | { type: 'task'; listId: string }
 
 export function Board({ projectId }: { projectId: string }) {
+  const { data: me } = useQuery(sessionQueryOptions)
+useProjectLive(projectId, me?.id)
   const { t } = useTranslation('board')
   const [dialog, setDialog] = useState<DialogState>({ type: 'none' })
   const [activeId, setActiveId] = useState<string | null>(null)

@@ -16,6 +16,8 @@ export const paths = {
     dashboard: "/app/dashboard",
     projects: "/app/projects",
     projectBoard: (id: string) => `/app/projects/${id}`,
+    projectMembers: (id: string) => `/app/projects/${id}/members`,
+invite: (token: string) => `/app/invite/${token}`, 
      
   },
   settings: {

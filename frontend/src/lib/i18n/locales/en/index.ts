@@ -10,7 +10,7 @@ import { marketing } from './marketing'
 import { legal } from './legal'
 import { projects } from './projects'
  import { board } from './board'
-
+import { members } from './members' 
 export const en = {
-  common, validation, errors, auth, layout, settings, notifications, marketing, legal, projects, board
+  common, validation, errors, auth, layout, settings, notifications, marketing, legal, projects, board, members,
 } as const
