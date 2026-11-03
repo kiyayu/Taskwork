@@ -19,7 +19,8 @@ export const PrivateRoute: RouteObject[] = [
       { path: 'dashboard', handle: { title: 'Dashboard' }, lazy: page(() => import('@/features/dashboard/Pages/Dashboard')) },
       { path: 'projects', handle: { titleKey: 'titles.projects' }, lazy: page(() => import('@/features/projects/pages/ProjectsPage')) },
       { path: 'projects/:projectId', handle: { titleKey: 'titles.board' }, lazy: page(() => import('@/features/board/pages/BoardPage')) },
-
+{ path: 'projects/:projectId/members', handle: { titleKey: 'titles.members' }, lazy: page(() => import('@/features/members/pages/MembersPage')) },
+{ path: 'invite/:token', handle: { titleKey: 'titles.invite' }, lazy: page(() => import('@/features/members/pages/AcceptInvitePage')) },
       {
         path: 'settings',
         lazy: page(() => import('@/features/settings/SettingsLayout')),

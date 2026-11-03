@@ -6,7 +6,7 @@ import {
   closestCorners, useSensor, useSensors, type DragEndEvent, type DragStartEvent,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft, Plus, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -111,11 +111,16 @@ useProjectLive(projectId, me?.id)
       {back}
       <PageHeader
         title={project.data.name}
-        actions={canEdit && (
-          <Button variant="outline" onClick={() => setDialog({ type: 'list' })} icon={<Plus />}>
-            {t('addList')}
-          </Button>
-        )}
+       actions={
+  <div className="flex flex-wrap gap-2">
+    <Button asChild variant="outline" icon={<Users />}>
+      <Link to={paths.app.projectMembers(projectId)}>{t('members')}</Link>
+    </Button>
+    {canEdit && (
+      <Button variant="outline" onClick={() => setDialog({ type: 'list' })} icon={<Plus />}>{t('addList')}</Button>
+    )}
+  </div>
+}
       />
 
       {columns.length === 0 && <p className="text-sm text-muted-foreground">{t('noLists')}</p>}
