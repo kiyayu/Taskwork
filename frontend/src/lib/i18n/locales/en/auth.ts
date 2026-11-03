@@ -75,4 +75,9 @@ export const auth = {
     or: 'or',
     continue: 'Continue with Google',
   },
+    demo: {
+    button: 'Try the demo',
+    signingIn: 'Signing in...',
+    hint: 'No sign-up needed. It is a shared account, so the data is reset regularly.',
+  },
 } as const

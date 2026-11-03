@@ -25,9 +25,12 @@ import { TaskDialog } from './TaskDialog'
 import { useQuery } from '@tanstack/react-query'
 import { sessionQueryOptions } from '@/features/auth'
 import { useProjectLive } from '@/features/live'
+import { Activity } from 'lucide-react'                    // add to the lucide import
+import { ActivitySheet } from '@/features/activity'
 type DialogState = { type: 'none' } | { type: 'list' } | { type: 'task'; listId: string }
 
 export function Board({ projectId }: { projectId: string }) {
+  const [activityOpen, setActivityOpen] = useState(false)
   const { data: me } = useQuery(sessionQueryOptions)
 useProjectLive(projectId, me?.id)
   const { t } = useTranslation('board')
@@ -113,12 +116,15 @@ useProjectLive(projectId, me?.id)
         title={project.data.name}
        actions={
   <div className="flex flex-wrap gap-2">
+    <Button variant="outline" onClick={() => setActivityOpen(true)} icon={<Activity />}>{t('activity')}</Button>
     <Button asChild variant="outline" icon={<Users />}>
       <Link to={paths.app.projectMembers(projectId)}>{t('members')}</Link>
     </Button>
     {canEdit && (
       <Button variant="outline" onClick={() => setDialog({ type: 'list' })} icon={<Plus />}>{t('addList')}</Button>
+      
     )}
+    <ActivitySheet projectId={projectId} open={activityOpen} onOpenChange={setActivityOpen} />
   </div>
 }
       />

@@ -8,12 +8,18 @@ import { useProjectLive } from './useProjectLive'
 class FakeSource {
   static last: FakeSource
   static CLOSED = 2
+  url: string
   readyState = 1
   onopen: (() => void) | null = null
   onmessage: ((m: { data: string }) => void) | null = null
   onerror: (() => void) | null = null
   close = vi.fn(() => { this.readyState = 2 })
-  constructor(public url: string) { FakeSource.last = this }
+
+  constructor(url: string) {
+    this.url = url
+    FakeSource.last = this
+  }
+
   emit(data: object) { this.onmessage?.({ data: JSON.stringify(data) }) }
 }
 

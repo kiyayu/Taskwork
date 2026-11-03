@@ -4,6 +4,9 @@ import { z } from 'zod'
 const schema = z.object({
   VITE_API_BASE_URL: z.string().url('VITE_API_BASE_URL must be a full URL'),
   VITE_DEFAULT_LANG: z.string().min(2).default('en'),
+  // optional: when both are set, a "Try demo" button appears
+  VITE_DEMO_EMAIL: z.string().optional(),
+  VITE_DEMO_PASSWORD: z.string().optional(),
 })
 
 const parsed = schema.safeParse(import.meta.env)
@@ -14,6 +17,8 @@ if (!parsed.success) {
 }
 
 export const env = {
-  apiBaseUrl: parsed.data.VITE_API_BASE_URL.replace(/\/?$/, '/'), // always ends with one slash
+  apiBaseUrl: parsed.data.VITE_API_BASE_URL.replace(/\/?$/, '/'),
   defaultLang: parsed.data.VITE_DEFAULT_LANG,
+  demoEmail: parsed.data.VITE_DEMO_EMAIL,
+  demoPassword: parsed.data.VITE_DEMO_PASSWORD,
 }

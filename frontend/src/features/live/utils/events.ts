@@ -6,18 +6,19 @@ type Key = readonly unknown[]
 // Which cached queries does an event make stale? Unknown types return [] and are ignored.
 export const keysForEvent = (e: LiveEvent): Key[] => {
   const p = e.projectId
+  const feed: Key = ['activity', p]
   switch (e.type) {
     case 'tasks_changed':
     case 'lists_changed':
-      return [['board', p, 'tasks'], ['board', p, 'lists']]
+      return [['board', p, 'tasks'], ['board', p, 'lists'], feed]
     case 'checklist_changed':
       return [['board', p, 'tasks'], ...(e.taskId ? [['board', p, 'checklist', e.taskId]] : [])]
     case 'comments_changed':
-      return [['board', p, 'tasks'], ...(e.taskId ? [['board', p, 'comments', e.taskId]] : [])]
+      return [['board', p, 'tasks'], ...(e.taskId ? [['board', p, 'comments', e.taskId]] : []), feed]
     case 'attachments_changed':
-      return e.taskId ? [['board', p, 'attachments', e.taskId]] : []
+      return [...(e.taskId ? [['board', p, 'attachments', e.taskId]] : []), feed]
     case 'members_changed':
-      return [['members', p], ['board', p, 'tasks']]
+      return [['members', p], ['board', p, 'tasks'], feed]
     case 'project_changed':
       return [['projects']]
     default:

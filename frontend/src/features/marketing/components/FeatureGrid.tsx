@@ -1,10 +1,14 @@
 //src/features/marketing/components/FeatureGrid.tsx
-import { Layers, ShieldCheck, Zap, type LucideIcon } from 'lucide-react'
+//src/features/marketing/components/FeatureGrid.tsx  (change only the imports and the icon map)
+import { Layers, MessageSquare, Radio, ShieldCheck, Users, Zap, type LucideIcon } from 'lucide-react'
+
+
 import { useTranslation } from '@/lib/i18n'
 
 // Locale files hold an icon NAME; this map is the only place icons are chosen.
-const icons: Record<string, LucideIcon> = { zap: Zap, shield: ShieldCheck, layers: Layers }
-
+ const icons: Record<string, LucideIcon> = {
+  zap: Zap, shield: ShieldCheck, layers: Layers, radio: Radio, users: Users, message: MessageSquare,
+}
 type Item = { title: string; description: string; icon: string }
 
 export function FeatureGrid() {
