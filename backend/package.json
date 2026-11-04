@@ -10,7 +10,8 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"**/*.ts\"",
-    "seed": "node dist/scripts/seed.js"
+    "seed": "node dist/scripts/seed.js",
+    "make-admin": "node dist/scripts/makeAdmin.js"
   },
   "keywords": [],
   "type": "module",
