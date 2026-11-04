@@ -14,7 +14,7 @@ import {
 import { useTranslation } from '@/lib/i18n'
 import { appConfig } from './nav.config'
 
-export type ShellUser = { name: string; email: string; avatarUrl?: string }
+export type ShellUser = { name: string; email: string; avatarUrl?: string; role?:string}
 
 export function Topbar({
   user,

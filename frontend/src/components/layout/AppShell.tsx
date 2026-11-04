@@ -63,7 +63,7 @@ export function AppShell({
         <span className="text-base font-semibold text-foreground">{appConfig.brand}</span>
 
         {/* lg and up, topnav variant only: links live in the navbar */}
-        {!isSidebar && <NavList orientation="horizontal" className="hidden ml-4 lg:flex" />}
+        {!isSidebar &&<NavList orientation="horizontal" role={user?.role} className="hidden ml-4 lg:flex" />}
 
         <Topbar user={user} onLogout={onLogout} notifications={notifications} />
       </header>
@@ -77,7 +77,7 @@ export function AppShell({
             )}
           >
             <div className="w-56 p-4">
-              <NavList />
+            <NavList role={user?.role} />
             </div>
           </aside>
         )}
@@ -99,7 +99,7 @@ export function AppShell({
         </div>
       </div>
 
-      <MobileSidebar />
+     <MobileSidebar role={user?.role} />
     </div>
   )
 }

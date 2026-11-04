@@ -5,16 +5,13 @@ import { useLayoutStore } from '@/store/layout.ui.store'
 import { NavList } from './NavList'
 import { appConfig } from './nav.config'
 
-export function MobileSidebar() {
+export function MobileSidebar({ role }: { role?: string }) {
   const open = useLayoutStore((s) => s.sidebarOpen)
   const close = useLayoutStore((s) => s.closeSidebar)
 
-  // if the window grows to desktop while the drawer is open, close it
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)')
-    const onChange = (e: MediaQueryListEvent) => {
-      if (e.matches) close()
-    }
+    const onChange = (e: MediaQueryListEvent) => { if (e.matches) close() }
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
   }, [close])
@@ -25,7 +22,7 @@ export function MobileSidebar() {
         <SheetHeader>
           <SheetTitle>{appConfig.brand}</SheetTitle>
         </SheetHeader>
-        <NavList onNavigate={close} />
+        <NavList role={role} onNavigate={close} />
       </SheetContent>
     </Sheet>
   )

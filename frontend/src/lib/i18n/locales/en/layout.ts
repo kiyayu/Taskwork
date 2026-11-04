@@ -6,6 +6,7 @@ export const layout = {
     tasks: 'Tasks',
     home: 'Home',
     contact: 'Contact',
+    admin: 'Admin'
   },
   account: {
     menu: 'Account menu',
@@ -43,5 +44,7 @@ export const layout = {
     account: 'Account', security: 'Security', privacyData: 'Privacy & data',
     board: 'Board',
     members: 'Members', invite: 'Join project',
+    admin:'Admin',
+     projects: 'Projects',  
   },
 } as const

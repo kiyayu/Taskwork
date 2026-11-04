@@ -13,6 +13,7 @@ export const paths = {
   
   app: {
     root: "/app",
+    admin: "/app/admin",
     dashboard: "/app/dashboard",
     projects: "/app/projects",
     projectBoard: (id: string) => `/app/projects/${id}`,

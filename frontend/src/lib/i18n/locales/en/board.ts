@@ -79,5 +79,11 @@ export const board = {
     delete: 'Remove attachment',
     deleted: 'Attachment removed',
     by: 'Added by {{name}}',
+    preview: 'Preview {{name}}',
+  },
+   viewer: {
+    close: 'Close',
+    newTab: 'Open in new tab',
+    blankHint: 'If the preview stays blank, open the file in a new tab.',
   },
 } as const

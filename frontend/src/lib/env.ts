@@ -2,7 +2,9 @@
 import { z } from 'zod'
 
 const schema = z.object({
-  VITE_API_BASE_URL: z.string().url('VITE_API_BASE_URL must be a full URL'),
+  VITE_API_BASE_URL: z
+  .string()
+  .refine((v) => v.startsWith('/') || /^https?:\/\//.test(v), 'VITE_API_BASE_URL must be a full URL or start with /'),
   VITE_DEFAULT_LANG: z.string().min(2).default('en'),
   // optional: when both are set, a "Try demo" button appears
   VITE_DEMO_EMAIL: z.string().optional(),

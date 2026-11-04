@@ -13,5 +13,5 @@ import { projects } from './projects'
 import { members } from './members' 
 import { activity } from './activity'
 export const en = {
-  common, validation, errors, auth, layout, settings, notifications, marketing, legal, projects, board, members, activity: 'Activity',
+  common, validation, errors, auth, layout, settings, notifications, marketing, legal, projects, board, members, activity,
 } as const

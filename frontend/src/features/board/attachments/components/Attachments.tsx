@@ -1,4 +1,5 @@
 //src/features/board/attachments/components/Attachments.tsx
+import { useState } from 'react'
 import { FileText, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,9 @@ import { formatBytes } from '@/lib/files'
 import { useTranslation } from '@/lib/i18n'
 import { useUpload } from '@/features/uploads'
 import { useAttach, useAttachments, useRemoveAttachment } from '../hooks/useAttachments'
+import type { Attachment } from '../types'
+import { fileKind, isSafeUrl } from '../utils/fileKind'
+import { FileViewerDialog } from './FileViewerDialog'
 
 // Mirrors the backend rule for the "attachment" purpose. The server enforces the real limits.
 const ATTACHMENT_RULE = {
@@ -20,6 +24,7 @@ type Props = { projectId: string; taskId: string; canEdit: boolean; isOwner: boo
 
 export function Attachments({ projectId, taskId, canEdit, isOwner, currentUserId }: Props) {
   const { t } = useTranslation('board')
+  const [viewing, setViewing] = useState<Attachment | null>(null)
   const query = useAttachments(projectId, taskId)
   const upload = useUpload('attachment')
   const attach = useAttach(projectId, taskId)
@@ -31,7 +36,6 @@ export function Attachments({ projectId, taskId, canEdit, isOwner, currentUserId
 
   const files = query.data ?? []
 
-  // sign -> upload straight to storage -> tell our API the key (never a URL)
   const onFile = (file: File) =>
     upload.mutate(file, {
       onSuccess: (fileKey) =>
@@ -49,16 +53,23 @@ export function Attachments({ projectId, taskId, canEdit, isOwner, currentUserId
       <ul className="space-y-2">
         {files.map((f) => {
           const canDelete = f.uploaderId === currentUserId || isOwner
-          const safe = f.url.startsWith('https://') // never render a javascript: or data: URL as a link
+          const safe = isSafeUrl(f.url)
+          const previewable = safe && fileKind(f.url, f.name) !== 'other'
+          const nameClass = 'block text-sm font-medium truncate text-left'
           return (
             <li key={f.id} className="flex items-center gap-3 p-3 border border-border rounded-lg">
               <FileText className="size-5 shrink-0 text-muted-foreground" aria-hidden />
               <div className="flex-1 min-w-0">
-                {safe ? (
-                  <a href={f.url} target="_blank" rel="noopener noreferrer"
-                    className="block text-sm font-medium text-primary truncate hover:underline">{f.name}</a>
+                {previewable ? (
+                  // images and PDFs open in the in-app viewer
+                  <button type="button" onClick={() => setViewing(f)} aria-label={t('attachments.preview', { name: f.name })}
+                    className={`${nameClass} w-full text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded`}>
+                    {f.name}
+                  </button>
+                ) : safe ? (
+                  <a href={f.url} target="_blank" rel="noopener noreferrer" className={`${nameClass} text-primary hover:underline`}>{f.name}</a>
                 ) : (
-                  <span className="block text-sm font-medium text-foreground truncate">{f.name}</span>
+                  <span className={`${nameClass} text-foreground`}>{f.name}</span>
                 )}
                 <p className="text-xs text-muted-foreground">
                   {formatBytes(f.bytes)} · {t('attachments.by', { name: f.uploaderName })}
@@ -91,6 +102,8 @@ export function Attachments({ projectId, taskId, canEdit, isOwner, currentUserId
           )}
         </div>
       )}
+
+      <FileViewerDialog file={viewing} onClose={() => setViewing(null)} />
     </div>
   )
 }
