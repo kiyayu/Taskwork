@@ -1,33 +1,33 @@
-//src/lib/i18n/locales/en/marketing.ts
+// src/lib/i18n/locales/en/marketing.ts
 export const marketing = {
-  tagline: 'Plan work together on boards that update live.',
+  tagline: 'A live project board for small teams.',
   hero: {
-    title: 'Plan projects with your team, on one live board',
+    title: 'Plan your team\'s work on one live board',
     description:
-      'Create lists, drag tasks between them, break work into checklists, and talk it through in comments. Everyone sees changes as they happen.',
-    primary: 'Get started',
+      'Make lists, drag tasks between them, add checklists and comments, and see your teammates\' changes the moment they happen. No refreshing, no lost messages.',
+    primary: 'Get started free',
     secondary: 'Log in',
-    demoHint: 'No sign-up needed: open the shared demo project in one click.',
+    demoHint: 'Want to look around first? Try the demo. No sign-up needed.',
   },
   features: {
-    title: 'Everything a small team needs',
+    title: 'What you get',
     items: [
-      { title: 'Boards you shape', description: 'Create your own lists and drag tasks between them. Every move is saved in one request.', icon: 'layers' },
-      { title: 'Live for everyone', description: 'When a teammate moves a card or comments, your board updates without a refresh.', icon: 'radio' },
-      { title: 'Roles that are enforced', description: 'Owners, editors and viewers. Every rule is checked on the server, not just hidden in the interface.', icon: 'shield' },
-      { title: 'Join by link', description: 'Invite people with an expiring link and the role you choose. No hunting for email addresses.', icon: 'users' },
-      { title: 'Checklists with progress', description: 'Break a task into items and sub-items. Progress shows on the card.', icon: 'zap' },
-      { title: 'Comments and files', description: 'Mention teammates, get notified, and attach files straight to a task.', icon: 'message' },
+      { title: 'Boards that fit your work', description: 'Create your own lists, like Backlog, Doing and Review, and drag tasks between them.', icon: 'layers' },
+      { title: 'Updates as they happen', description: 'When a teammate moves a card or leaves a comment, your board changes on its own.', icon: 'radio' },
+      { title: 'The right access for everyone', description: 'Give people the owner, editor or viewer role. The server checks it on every request.', icon: 'shield' },
+      { title: 'Invite with a link', description: 'Send a link that expires and picks the role for you. No need to collect email addresses.', icon: 'users' },
+      { title: 'Checklists with progress', description: 'Split a task into steps and sub-steps. The card shows how far along you are.', icon: 'zap' },
+      { title: 'Comments and files', description: 'Mention a teammate to notify them, and attach images or PDFs right on the task.', icon: 'message' },
     ],
   },
   cta: {
-    title: 'Ready to plan your next project?',
-    description: 'Create an account in under a minute.',
-    button: 'Create account',
+    title: 'Start your first board today',
+    description: 'It takes about a minute to sign up, and you can invite your team right away.',
+    button: 'Create your account',
   },
   contact: {
     title: 'Contact',
-    description: 'Questions, feedback or support requests.',
-    body: 'Email us and we will reply as soon as we can.',
+    description: 'Questions, ideas or problems? We read every message.',
+    body: 'Send us an email and we will get back to you as soon as we can.',
   },
 } as const

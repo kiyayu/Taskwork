@@ -2,18 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="A short description of the product." />
-    <title>BrandName</title>
-    <script>
-      try {
-        var s = JSON.parse(localStorage.getItem("preferences") || "{}").state || {};
-        var dark = s.theme === "dark" ||
-          ((!s.theme || s.theme === "system") && matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.classList.toggle("dark", dark);
-      } catch (e) {}
-    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href="https://taskwork-gules.vercel.app/" />
+
+    <title>Taskwork - a live project board for small teams</title>
+    <meta
+      name="description"
+      content="Plan work with your team on one live board. Drag tasks between lists, add checklists, comment and attach files. Changes show up for everyone instantly."
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Taskwork" />
+    <meta property="og:title" content="Taskwork - a live project board for small teams" />
+    <meta
+      property="og:description"
+      content="Lists, drag and drop, checklists, comments and files. Your teammates see every change as it happens."
+    />
+    <meta property="og:url" content="https://taskwork-gules.vercel.app/" />
+
     <script src="/theme-init.js"></script>
   </head>
   <body>
