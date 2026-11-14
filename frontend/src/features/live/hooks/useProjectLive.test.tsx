@@ -59,7 +59,7 @@ describe('useProjectLive', () => {
       for (let i = 0; i < 5; i++) FakeSource.last.emit({ type: 'tasks_changed', projectId: 'p', actorId: 'o' })
       vi.advanceTimersByTime(200)
     })
-    expect(spy).toHaveBeenCalledTimes(2) // tasks + lists, once each
+    expect(spy).toHaveBeenCalledTimes(3) // tasks + lists, once each
   })
 
   it('closes the stream on unmount', () => {

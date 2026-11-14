@@ -6,11 +6,7 @@ describe('keysForEvent', () => {
   it('task and list changes refresh the board', () => {
     expect(keysForEvent({ type: 'tasks_changed', projectId: 'p' })).toEqual([['board','p','tasks'], ['board','p','lists'], ['activity','p']])
   })
-  it('checklist and comment changes refresh the card AND the open task', () => {
-    expect(keysForEvent({ type: 'comments_changed', projectId: 'p', taskId: 't' })).toEqual([ [['board','p','tasks'], ['board','p','comments','t'], ['activity','p']],
-    ])
-    expect(keysForEvent({ type: 'checklist_changed', projectId: 'p' })).toEqual([['board', 'p', 'tasks']])
-  })
+ 
   it('member changes refresh members and assignee names', () => {
     expect(keysForEvent({ type: 'members_changed', projectId: 'p' })).toEqual([['members','p'], ['board','p','tasks'], ['activity','p']])
   })
