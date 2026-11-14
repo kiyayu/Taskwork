@@ -1,8 +1,8 @@
 {
-  "name": "kit",
+  "name": "taskwork-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Taskwork API: projects, tasks, comments, files and live updates",
+  "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
