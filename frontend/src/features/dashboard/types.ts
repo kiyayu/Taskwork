@@ -1,10 +1,11 @@
-//src/features/dashboard/api/overview.api.ts
-import { api } from '@/lib/axios'
-import type { Overview } from '../types'
-
-export const overviewApi = {
-  get: async (): Promise<Overview> => {
-    const res = await api.get<{ data: Overview }>('/me/overview')
-    return res.data.data
-  },
+//src/features/dashboard/types.ts
+export type OverviewTask = {
+  id: string
+  projectId: string
+  projectName: string
+  title: string
+  dueDate: string | null
+  priority: 1 | 2 | 3
 }
+
+export type Overview = { projects: number; assigned: number; overdue: number; dueSoon: number; tasks: OverviewTask[] }
