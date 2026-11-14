@@ -22,7 +22,7 @@ const requireAdmin = async () => {
 export const PrivateRoute: RouteObject[] = [
   {
     errorElement: <ErrorPanel />,
-    children: [
+    children: [   
       { index: true, loader: () => redirect(paths.app.dashboard) },
       { path: 'dashboard', handle: { titleKey: 'titles.dashboard' }, lazy: page(() => import('@/features/dashboard/pages/DashboardPage')) },
       { path: 'projects', handle: { titleKey: 'titles.projects' }, lazy: page(() => import('@/features/projects/pages/ProjectsPage')) },
