@@ -1,12 +1,18 @@
 // src/app/router/Index.tsx
-import { createBrowserRouter, RouterProvider, redirect } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, redirect, type RouteObject } from 'react-router-dom'
 import RootBinaryController from '@/app/layout/RootBinaryController'
 import { ErrorPage } from '@/components/layout/ErrorPage'
 import { queryClient } from '@/lib/query.client'
 import { sessionQueryOptions } from '@/features/auth'
 import { paths } from '@/config/paths'
-import { marketingRoutes, authRoutes, createAuthGuard } from './PublicPath'
+import { marketingRoutes, authRoutes, createAuthGuard, createHomeGuard } from './PublicPath'
 import { PrivateRoute } from './PrivatePath'
+
+const homeGuard = createHomeGuard(queryClient)
+
+const guardedMarketingRoutes: RouteObject[] = marketingRoutes.map((r) =>
+  r.index ? { ...r, loader: homeGuard } : r
+)
 
 const router = createBrowserRouter([
   {
@@ -19,7 +25,7 @@ const router = createBrowserRouter([
           import('@/components/layout/MarketingLayout').then((m) => ({
             Component: m.MarketingLayout,
           })),
-        children: marketingRoutes,
+        children: guardedMarketingRoutes,
       },
       {
         loader: createAuthGuard(queryClient),
@@ -54,7 +60,6 @@ const router = createBrowserRouter([
           })),
         children: PrivateRoute,
       },
-      // public unknown URLs only; /app/* unknowns are caught inside PrivateRoute
       {
         path: '*',
         loader: () => {
