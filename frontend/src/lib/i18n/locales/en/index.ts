@@ -1,4 +1,4 @@
-//src/lib/i18n/locales/en/index.ts
+// src/lib/i18n/locales/en/index.ts
 import { common } from './common'
 import { validation } from './validation'
 import { errors } from './errors'
@@ -9,9 +9,14 @@ import { notifications } from './notifications'
 import { marketing } from './marketing'
 import { legal } from './legal'
 import { projects } from './projects'
- import { board } from './board'
-import { members } from './members' 
+import { board } from './board'
+import { members } from './members'
 import { activity } from './activity'
+import { admin } from './admin'   
+import { dashboard } from './dashboard'
+
 export const en = {
-  common, validation, errors, auth, layout, settings, notifications, marketing, legal, projects, board, members, activity,
+  common, validation, errors, auth, layout, settings, notifications,
+  marketing, legal, projects, board, members, activity,
+  admin, dashboard                        // add
 } as const

@@ -1,13 +1,12 @@
 //src/lib/i18n/locales/en/layout.ts
 export const layout = {
-  nav: {
-    dashboard: 'Dashboard',
-    notes: 'Notes',
-    tasks: 'Tasks',
-    home: 'Home',
-    contact: 'Contact',
-    admin: 'Admin'
-  },
+nav: {
+  dashboard: 'Dashboard',
+  projects: 'Projects',
+  home: 'Home',
+  contact: 'Contact',
+  admin: 'Admin',
+},
   account: {
     menu: 'Account menu',
     profile: 'Profile',
@@ -35,16 +34,13 @@ export const layout = {
     logIn: 'Log in',
     getStarted: 'Get started',
   },
-    titles: {
-    contact: 'Contact', terms: 'Terms of Service', privacy: 'Privacy Policy',
-    login: 'Log in', register: 'Create account', verifyEmail: 'Verify email',
-    forgotPassword: 'Forgot password', resetPassword: 'Reset password',
-    dashboard: 'Dashboard', notes: 'Notes', profile: 'Profile',
-    preferences: 'Preferences', notifications: 'Notifications',
-    account: 'Account', security: 'Security', privacyData: 'Privacy & data',
-    board: 'Board',
-    members: 'Members', invite: 'Join project',
-    admin:'Admin',
-     projects: 'Projects',  
-  },
+  titles: {
+  contact: 'Contact', terms: 'Terms of Service', privacy: 'Privacy Policy',
+  login: 'Log in', register: 'Create account', verifyEmail: 'Verify email',
+  forgotPassword: 'Forgot password', resetPassword: 'Reset password',
+  dashboard: 'Dashboard', projects: 'Projects', board: 'Board',
+  members: 'Members', invite: 'Join project', admin: 'Admin',
+  profile: 'Profile', preferences: 'Preferences', notifications: 'Notifications',
+  account: 'Account', security: 'Security', privacyData: 'Privacy & data',
+},
 } as const
