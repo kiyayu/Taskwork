@@ -8,6 +8,8 @@ A project board for small teams. You make lists, drag tasks between them, add ch
 
 Click "Try the demo" to look around without signing up. The backend is on free hosting, so the first load after a break can take up to a minute.
 
+![Taskwork board](docs/board.jpg)
+
 ## What you can do
 
 - Create projects and lists, drag tasks around, archive and restore them
@@ -43,7 +45,8 @@ Click "Try the demo" to look around without signing up. The backend is on free h
 - **Small task documents.** Comments, checklist items, files and activity are in their own collections, so a task document stays small.
 - **Safe invite links.** Invite tokens are stored hashed and used with one atomic update, so the max uses limit holds even when two people click at once.
 - **Live updates send ids only.** The browser then loads the data through the normal endpoints, so permissions still apply.
-- **Text in translation files.** A lint rule also stops shared code from importing feature code.
+- **Text in translation files.** All user-facing text lives in translation files, not in components.
+- **Enforced boundaries.** A lint rule stops shared code from importing feature code.
 
 ## Run it on your computer
 
