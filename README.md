@@ -4,7 +4,7 @@
 
 A project board for small teams. You make lists, drag tasks between them, add checklists, comment, and attach files. Changes from other people show up without refreshing the page.
 
-**Live demo:** https://YOUR-APP.vercel.app
+**Live demo:** https://taskwork-gules.vercel.app/
 
 Click "Try the demo" to look around without signing up. The backend is on free hosting, so the first load after a break can take up to a minute.
 
